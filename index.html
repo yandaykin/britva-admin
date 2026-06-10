@@ -1930,6 +1930,29 @@ body {
   position: relative;
   z-index: 1;
 }
+
+/* ===== KPI TAB ===== */
+.kpi-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.kpi-period{display:flex;gap:4px;background:#131311;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:4px}
+.kpi-period button{font-family:'AkzidenzCn',sans-serif;font-size:13px;letter-spacing:0.08em;padding:8px 18px;border:none;border-radius:10px;background:transparent;color:rgba(255,255,255,0.45);cursor:pointer;transition:all .2s}
+.kpi-period button.is-on{background:rgba(166,206,57,0.12);color:#A6CE39;box-shadow:0 0 12px rgba(166,206,57,0.15)}
+.kpi-mock{font-family:'AkzidenzCn',sans-serif;font-size:11px;letter-spacing:0.12em;color:rgba(255,255,255,0.3);border:1px dashed rgba(166,206,57,0.35);border-radius:8px;padding:6px 10px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.kpi-card{background:#131311;border:1px solid rgba(255,255,255,0.06);border-radius:18px;padding:18px;transition:transform .2s,border-color .2s}
+.kpi-card:hover{transform:translateY(-2px);border-color:rgba(166,206,57,0.3)}
+.kpi-name{font-family:'AkzidenzExt',sans-serif;font-size:17px;color:#fff;letter-spacing:0.04em}
+.kpi-tier{font-family:'AkzidenzCn',sans-serif;font-size:11px;letter-spacing:0.14em;color:#A6CE39;margin:4px 0 14px}
+.kpi-rev{font-family:'AkzidenzExt',sans-serif;font-size:26px;color:#A6CE39;text-shadow:0 0 18px rgba(166,206,57,0.25)}
+.kpi-rev-label{font-family:'AkzidenzCn',sans-serif;font-size:11px;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin-bottom:14px}
+.kpi-rows{display:flex;flex-direction:column;gap:8px}
+.kpi-row{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:7px}
+.kpi-row-label{font-family:'AkzidenzCn',sans-serif;font-size:12.5px;letter-spacing:0.06em;color:rgba(255,255,255,0.5)}
+.kpi-row-val{font-family:'AkzidenzExt',sans-serif;font-size:14px;color:#fff}
+.kpi-row-val.is-bad{color:#e06c5a}
+.kpi-occ-wrap{margin-top:12px}
+.kpi-occ-track{height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden}
+.kpi-occ-fill{height:100%;background:linear-gradient(90deg,rgba(166,206,57,0.5),#A6CE39);border-radius:3px;box-shadow:0 0 10px rgba(166,206,57,0.4);transition:width .6s ease}
+.kpi-occ-line{display:flex;justify-content:space-between;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -3924,6 +3947,11 @@ window.BRITVA = {
     label: 'УСЛУГИ',
     num: '07',
     primary: false
+  }, {
+    key: 'kpi',
+    label: 'KPI',
+    num: '08',
+    primary: false
   }];
   function BritvaMark() {
     return /*#__PURE__*/React.createElement("div", {
@@ -4114,7 +4142,7 @@ window.BRITVA = {
       _React$useState38 = _slicedToArray(_React$useState37, 2),
       tab = _React$useState38[0],
       setTab = _React$useState38[1];
-    var TabComp = tab === 'price' ? window.TabPrice : tab === 'calc' ? window.TabCalculator : tab === 'train' ? window.TabTrainer : tab === 'hbook' ? window.TabHandbook : tab === 'bar' ? window.TabBar : tab === 'svcs' ? window.TabServices : window.TabPlan;
+    var TabComp = tab === 'price' ? window.TabPrice : tab === 'calc' ? window.TabCalculator : tab === 'train' ? window.TabTrainer : tab === 'hbook' ? window.TabHandbook : tab === 'bar' ? window.TabBar : tab === 'svcs' ? window.TabServices : tab === 'kpi' ? window.TabKPI : window.TabPlan;
     return /*#__PURE__*/React.createElement("div", {
       className: "shell"
     }, /*#__PURE__*/React.createElement("header", {
@@ -4536,6 +4564,87 @@ var root = ReactDOM.createRoot(document.getElementById('root'));
     })));
   }
   window.TabServices = TabServices;
+})();
+
+// ============================================================
+// TAB: KPI (mock data — structure mirrors future YCLIENTS API)
+// ============================================================
+(function () {
+  // Когда подключим Cloudflare Worker, этот объект заменится на fetch(WORKER_URL)
+  var KPI_DATA = {
+    month: {
+      label: 'ИЮНЬ',
+      masters: [
+        { name: 'АРТЁМ', tier: 'BRAND BARBER+', revenue: 412500, avgCheck: 2450, occupancy: 87, newClients: 14, returnClients: 52, lostClients: 4 },
+        { name: 'ДАНИИЛ', tier: 'BRAND BARBER', revenue: 356800, avgCheck: 2210, occupancy: 81, newClients: 18, returnClients: 44, lostClients: 7 },
+        { name: 'МАКСИМ', tier: 'TOP BARBER', revenue: 298400, avgCheck: 1980, occupancy: 74, newClients: 21, returnClients: 35, lostClients: 9 },
+        { name: 'ИЛЬЯ', tier: 'BARBER', revenue: 224100, avgCheck: 1720, occupancy: 68, newClients: 25, returnClients: 27, lostClients: 12 }
+      ]
+    },
+    week: {
+      label: 'НЕДЕЛЯ',
+      masters: [
+        { name: 'АРТЁМ', tier: 'BRAND BARBER+', revenue: 98200, avgCheck: 2390, occupancy: 90, newClients: 3, returnClients: 13, lostClients: 1 },
+        { name: 'ДАНИИЛ', tier: 'BRAND BARBER', revenue: 84600, avgCheck: 2260, occupancy: 84, newClients: 5, returnClients: 11, lostClients: 2 },
+        { name: 'МАКСИМ', tier: 'TOP BARBER', revenue: 71300, avgCheck: 2010, occupancy: 77, newClients: 6, returnClients: 8, lostClients: 2 },
+        { name: 'ИЛЬЯ', tier: 'BARBER', revenue: 52900, avgCheck: 1690, occupancy: 70, newClients: 7, returnClients: 6, lostClients: 3 }
+      ]
+    }
+  };
+  function fmtMoney(n) {
+    return n.toLocaleString('ru-RU') + '\u00A0\u20BD';
+  }
+  function KpiCard(props) {
+    var m = props.m;
+    return React.createElement("div", { className: "kpi-card" },
+      React.createElement("div", { className: "kpi-name" }, m.name),
+      React.createElement("div", { className: "kpi-tier" }, m.tier),
+      React.createElement("div", { className: "kpi-rev" }, fmtMoney(m.revenue)),
+      React.createElement("div", { className: "kpi-rev-label" }, "\u0412\u042B\u0420\u0423\u0427\u041A\u0410"),
+      React.createElement("div", { className: "kpi-rows" },
+        React.createElement("div", { className: "kpi-row" },
+          React.createElement("span", { className: "kpi-row-label" }, "\u0421\u0440\u0435\u0434\u043D\u0438\u0439 \u0447\u0435\u043A"),
+          React.createElement("span", { className: "kpi-row-val" }, fmtMoney(m.avgCheck))),
+        React.createElement("div", { className: "kpi-row" },
+          React.createElement("span", { className: "kpi-row-label" }, "\u041D\u043E\u0432\u044B\u0435 \u043A\u043B\u0438\u0435\u043D\u0442\u044B"),
+          React.createElement("span", { className: "kpi-row-val" }, m.newClients)),
+        React.createElement("div", { className: "kpi-row" },
+          React.createElement("span", { className: "kpi-row-label" }, "\u041F\u043E\u0432\u0442\u043E\u0440\u043D\u044B\u0435"),
+          React.createElement("span", { className: "kpi-row-val" }, m.returnClients)),
+        React.createElement("div", { className: "kpi-row" },
+          React.createElement("span", { className: "kpi-row-label" }, "\u041F\u043E\u0442\u0435\u0440\u044F\u043D\u043D\u044B\u0435"),
+          React.createElement("span", { className: "kpi-row-val is-bad" }, m.lostClients))),
+      React.createElement("div", { className: "kpi-occ-wrap" },
+        React.createElement("div", { className: "kpi-occ-line" },
+          React.createElement("span", { className: "kpi-row-label" }, "\u0417\u0430\u043F\u043E\u043B\u043D\u044F\u0435\u043C\u043E\u0441\u0442\u044C"),
+          React.createElement("span", { className: "kpi-row-val" }, m.occupancy + '%')),
+        React.createElement("div", { className: "kpi-occ-track" },
+          React.createElement("div", { className: "kpi-occ-fill", style: { width: m.occupancy + '%' } }))));
+  }
+  function TabKPI() {
+    var _s = React.useState('month'),
+      _s2 = _slicedToArray(_s, 2),
+      period = _s2[0],
+      setPeriod = _s2[1];
+    var data = KPI_DATA[period];
+    return React.createElement("section", { className: "tab-pane" },
+      React.createElement("div", { className: "kpi-head" },
+        React.createElement("div", { className: "kpi-period" },
+          React.createElement("button", {
+            className: period === 'month' ? 'is-on' : '',
+            onClick: function onClick() { setPeriod('month'); }
+          }, "\u041C\u0415\u0421\u042F\u0426"),
+          React.createElement("button", {
+            className: period === 'week' ? 'is-on' : '',
+            onClick: function onClick() { setPeriod('week'); }
+          }, "\u041D\u0415\u0414\u0415\u041B\u042F")),
+        React.createElement("div", { className: "kpi-mock" }, "\u0422\u0415\u0421\u0422\u041E\u0412\u042B\u0415 \u0414\u0410\u041D\u041D\u042B\u0415 \u00B7 API YCLIENTS \u0421\u041A\u041E\u0420\u041E")),
+      React.createElement("div", { className: "kpi-grid" },
+        data.masters.map(function (m, i) {
+          return React.createElement(KpiCard, { key: i, m: m });
+        })));
+  }
+  window.TabKPI = TabKPI;
 })();
 
 </script>
