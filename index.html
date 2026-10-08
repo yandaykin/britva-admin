@@ -966,6 +966,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; }
   font-variant-numeric: tabular-nums;
 }
 .tct-cmp { font-size: 28px; color: var(--text); letter-spacing: 0.18em;}
+.tr-card-title.tct-range { font-size: clamp(28px, 6vw, 64px); }
 
 .tr-opts {
   display: grid; gap: 10px;
@@ -1005,6 +1006,11 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; }
 .tr-opt.is-wrong { border-color: var(--warn); background: rgba(255,87,87,0.08); }
 .tr-opt.is-wrong .tr-opt-letter { color: var(--warn); border-color: var(--warn); }
 .tr-opt.is-locked { cursor: default; }
+.tr-opts-service .tr-opt { min-width: 0; }
+.tr-opts-service .tr-opt-label { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .tr-opts.tr-opts-service { grid-template-columns: minmax(0, 1fr); }
+}
 
 .tr-opts-cmp { grid-template-columns: 1fr 1fr; }
 .tr-opt-cmp {
@@ -3794,6 +3800,34 @@ var PRICE_2026 = {
       correctValue: entry.price
     };
   }
+  function priceKey(price) {
+    return String(price).replace(/[\s₽]/g, '').replace(/[–—]/g, '-');
+  }
+  function pricesOverlap(left, right) {
+    var leftKey = priceKey(left), rightKey = priceKey(right);
+    if (!/^\d+(?:-\d+)?$/.test(leftKey) || !/^\d+(?:-\d+)?$/.test(rightKey)) return leftKey === rightKey;
+    var leftBounds = leftKey.split('-').map(Number), rightBounds = rightKey.split('-').map(Number);
+    return Math.max(leftBounds[0], rightBounds[0]) <= Math.min(leftBounds[leftBounds.length - 1], rightBounds[rightBounds.length - 1]);
+  }
+  function makeServiceQuestion(tierKey) {
+    var entries = getPriceEntries(tierKey);
+    var entry = entries[Math.floor(Math.random() * entries.length)];
+    // Exclude equal prices and overlapping ranges so that only one offered answer fits.
+    var matchingNames = new Set(entries.filter(function (item) {
+      return pricesOverlap(item.price, entry.price);
+    }).map(function (item) { return item.name; }));
+    var alternatives = Array.from(new Set(entries.filter(function (item) {
+      return !matchingNames.has(item.name);
+    }).map(function (item) { return item.name; })));
+    return {
+      mode: 'service',
+      prompt: { title: formatPriceAnswer(entry.price), tier: entry.tier },
+      options: shuffle([entry.name].concat(shuffle(alternatives).slice(0, 3))).map(function (name) {
+        return { label: name, value: name };
+      }),
+      correctValue: entry.name
+    };
+  }
   function shuffle(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -3816,39 +3850,6 @@ var PRICE_2026 = {
   });
   function makeQuestion(mode) {
     var svcs = QUIZ_SERVICES;
-    if (mode === 'service') {
-      var _svc = svcs[Math.floor(Math.random() * svcs.length)];
-      var _validIdxs = _svc.prices.map(function (p, i) {
-        return p > 0 ? i : -1;
-      }).filter(function (i) {
-        return i >= 0;
-      });
-      var _tierIdx = _validIdxs[Math.floor(Math.random() * _validIdxs.length)];
-      var _correct = _svc.label;
-      var _distractors = new Set();
-      var _tries2 = 0;
-      while (_distractors.size < 3 && _tries2 < 200) {
-        _tries2++;
-        var _o = svcs[Math.floor(Math.random() * svcs.length)];
-        if (_o.label !== _correct) _distractors.add(_o.label);
-      }
-      return {
-        mode: mode,
-        svc: _svc,
-        tierIdx: _tierIdx,
-        prompt: {
-          title: "".concat(fmtRub2(_svc.prices[_tierIdx]), "\xA0\u20BD"),
-          tier: TR_TIERS[_tierIdx]
-        },
-        options: shuffle([_correct].concat(_toConsumableArray(_distractors))).map(function (l) {
-          return {
-            label: l,
-            value: l
-          };
-        }),
-        correctValue: _correct
-      };
-    }
     // compare
     var a, b, ai, bi, pa, pb;
     var tries = 0;
@@ -4032,6 +4033,8 @@ var PRICE_2026 = {
   function TabTrainer() {
     var priceTierState = React.useState(PRICE_TIERS[0].key);
     var priceTier = priceTierState[0], setPriceTier = priceTierState[1];
+    var serviceTierState = React.useState(PRICE_TIERS[0].key);
+    var serviceTier = serviceTierState[0], setServiceTier = serviceTierState[1];
     var _React$useState17 = React.useState(null),
       _React$useState18 = _slicedToArray(_React$useState17, 2),
       mode = _React$useState18[0],
@@ -4057,12 +4060,12 @@ var PRICE_2026 = {
       done = _React$useState28[0],
       setDone = _React$useState28[1];
     function start(m, tierKey) {
-      if (m === 'price' && !tierKey) {
-        setMode('price-pick');
+      if ((m === 'price' || m === 'service') && !tierKey) {
+        setMode(m + '-pick');
         return;
       }
       var qs = [];
-      for (var i = 0; i < TOTAL_Q; i++) qs.push(m === 'price' ? makePriceQuestion(tierKey) : makeQuestion(m));
+      for (var i = 0; i < TOTAL_Q; i++) qs.push(m === 'price' ? makePriceQuestion(tierKey) : m === 'service' ? makeServiceQuestion(tierKey) : makeQuestion(m));
       setMode(m);
       setQuestions(qs);
       setQIdx(0);
@@ -4090,17 +4093,19 @@ var PRICE_2026 = {
     }
 
     // ── EXAM MODE ─────────────────────────────────────────────
-    if (mode === 'price-pick') {
+    if (mode === 'price-pick' || mode === 'service-pick') {
+      var isServicePick = mode === 'service-pick';
+      var selectedTierKey = isServicePick ? serviceTier : priceTier;
       return React.createElement('div', { className: 'tab-trainer' },
         React.createElement('div', { className: 'tr-head tr-head-play' },
           React.createElement('div', null,
-            React.createElement('div', { className: 'kicker' }, '03 / УГАДАЙ ЦЕНУ'),
+            React.createElement('div', { className: 'kicker' }, isServicePick ? '03 / УГАДАЙ УСЛУГУ' : '03 / УГАДАЙ ЦЕНУ'),
             React.createElement('h2', { className: 'tr-title' }, 'ВЫБЕРИ ГРАДАЦИЮ'),
             React.createElement('div', { className: 'meta-sub' }, 'Прайс 2026 · 15 вопросов · без таймера')),
           React.createElement('button', { className: 'btn-ghost btn-sm', onClick: exitToMenu }, '← назад')),
-        React.createElement(PriceTierChoices, { name: 'trainer-price-tier', value: priceTier, onChange: setPriceTier }),
+        React.createElement(PriceTierChoices, { name: isServicePick ? 'trainer-service-tier' : 'trainer-price-tier', value: selectedTierKey, onChange: isServicePick ? setServiceTier : setPriceTier }),
         React.createElement('div', { className: 'tr-result-actions' },
-          React.createElement('button', { className: 'btn-prim', onClick: function () { start('price', priceTier); } }, 'НАЧАТЬ →')));
+          React.createElement('button', { className: 'btn-prim', onClick: function () { start(isServicePick ? 'service' : 'price', selectedTierKey); } }, 'НАЧАТЬ →')));
     }
     if (mode === 'exam') {
       return /*#__PURE__*/React.createElement(ExamMode, {
@@ -4164,7 +4169,7 @@ var PRICE_2026 = {
       }, /*#__PURE__*/React.createElement("button", {
         className: "btn-prim",
         onClick: function onClick() {
-          return start(mode, mode === 'price' ? priceTier : null);
+          return start(mode, mode === 'price' ? priceTier : mode === 'service' ? serviceTier : null);
         }
       }, "\u0415\u0429\u0401 \u0420\u0410\u0417"), /*#__PURE__*/React.createElement("button", {
         className: "btn-ghost",
@@ -4224,9 +4229,9 @@ var PRICE_2026 = {
     }, /*#__PURE__*/React.createElement("div", {
       className: "tr-card-tier"
     }, q.prompt.tier), /*#__PURE__*/React.createElement("div", {
-      className: "tr-card-title ".concat(q.mode === 'price' ? 'tct-svc' : q.mode === 'service' ? 'tct-num' : 'tct-cmp')
+      className: "tr-card-title ".concat(q.mode === 'price' ? 'tct-svc' : q.mode === 'service' ? 'tct-num' + (/[–—-]/.test(q.prompt.title) ? ' tct-range' : '') : 'tct-cmp')
     }, q.prompt.title), q.mode !== 'compare' ? /*#__PURE__*/React.createElement("div", {
-      className: "tr-opts"
+      className: "tr-opts" + (q.mode === 'service' ? ' tr-opts-service' : '')
     }, q.options.map(function (o, i) {
       var isCorrect = picked && o.value === q.correctValue;
       var isWrong = picked && picked.value === o.value && o.value !== q.correctValue;
