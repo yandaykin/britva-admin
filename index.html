@@ -1056,6 +1056,8 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; }
 .tr-opt-cmp.is-wrong { border-color: var(--warn); background: rgba(255,87,87,0.08); }
 .tr-opt-cmp.is-wrong .cmp-price { color: var(--warn); }
 .tr-opt-cmp.is-locked { cursor: default; }
+.tr-opt-cmp { min-width: 0; }
+.cmp-name { overflow-wrap: anywhere; }
 
 .tr-footer {
   display: flex; justify-content: flex-end; align-items: center;
@@ -3743,9 +3745,6 @@ var PRICE_2026 = {
 // TAB: ТРЕНАЖЁР
 // ============================================================
 (function () {
-  var _window$BRITVA3 = window.BRITVA,
-    TR_SERVICES = _window$BRITVA3.ALL_SERVICES,
-    TR_TIERS = _window$BRITVA3.TIERS;
   var MODES = [{
     key: 'price',
     title: 'УГАДАЙ ЦЕНУ',
@@ -3803,11 +3802,16 @@ var PRICE_2026 = {
   function priceKey(price) {
     return String(price).replace(/[\s₽]/g, '').replace(/[–—]/g, '-');
   }
+  function getPriceBounds(price) {
+    var key = priceKey(price);
+    if (!/^\d+(?:-\d+)?$/.test(key)) return null;
+    var bounds = key.split('-').map(Number);
+    return { min: bounds[0], max: bounds[bounds.length - 1] };
+  }
   function pricesOverlap(left, right) {
-    var leftKey = priceKey(left), rightKey = priceKey(right);
-    if (!/^\d+(?:-\d+)?$/.test(leftKey) || !/^\d+(?:-\d+)?$/.test(rightKey)) return leftKey === rightKey;
-    var leftBounds = leftKey.split('-').map(Number), rightBounds = rightKey.split('-').map(Number);
-    return Math.max(leftBounds[0], rightBounds[0]) <= Math.min(leftBounds[leftBounds.length - 1], rightBounds[rightBounds.length - 1]);
+    var leftBounds = getPriceBounds(left), rightBounds = getPriceBounds(right);
+    if (!leftBounds || !rightBounds) return priceKey(left) === priceKey(right);
+    return Math.max(leftBounds.min, rightBounds.min) <= Math.min(leftBounds.max, rightBounds.max);
   }
   function makeServiceQuestion(tierKey) {
     var entries = getPriceEntries(tierKey);
@@ -3828,6 +3832,29 @@ var PRICE_2026 = {
       correctValue: entry.name
     };
   }
+  function getComparisonPairs(tierKey) {
+    var entries = getPriceEntries(tierKey).filter(function (entry) { return getPriceBounds(entry.price) !== null; });
+    var pairs = [];
+    entries.forEach(function (left, index) {
+      entries.slice(index + 1).forEach(function (right) {
+        if (left.name !== right.name && !pricesOverlap(left.price, right.price)) pairs.push([left, right]);
+      });
+    });
+    return pairs;
+  }
+  function makeComparisonQuestion(tierKey) {
+    var pairs = getComparisonPairs(tierKey);
+    if (!pairs.length) return null;
+    var pair = shuffle(pairs[Math.floor(Math.random() * pairs.length)]);
+    return {
+      mode: 'compare',
+      prompt: { title: 'ЧТО ДОРОЖЕ?', tier: pair[0].tier },
+      options: pair.map(function (entry, index) {
+        return { label: entry.name, sub: entry.tier, value: index === 0 ? 'a' : 'b', price: entry.price };
+      }),
+      correctValue: getPriceBounds(pair[0].price).min > getPriceBounds(pair[1].price).max ? 'a' : 'b'
+    };
+  }
   function shuffle(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -3840,57 +3867,6 @@ var PRICE_2026 = {
   }
   function fmtRub2(n) {
     return Math.round(n).toLocaleString('ru-RU').replace(/,/g, "\xA0");
-  }
-
-  // Only use services with at least one non-zero price for quiz
-  var QUIZ_SERVICES = TR_SERVICES.filter(function (s) {
-    return s.prices.some(function (p) {
-      return p > 0;
-    });
-  });
-  function makeQuestion(mode) {
-    var svcs = QUIZ_SERVICES;
-    // compare
-    var a, b, ai, bi, pa, pb;
-    var tries = 0;
-    do {
-      a = svcs[Math.floor(Math.random() * svcs.length)];
-      b = svcs[Math.floor(Math.random() * svcs.length)];
-      var aIdxs = a.prices.map(function (p, i) {
-        return p > 0 ? i : -1;
-      }).filter(function (i) {
-        return i >= 0;
-      });
-      var bIdxs = b.prices.map(function (p, i) {
-        return p > 0 ? i : -1;
-      }).filter(function (i) {
-        return i >= 0;
-      });
-      ai = aIdxs[Math.floor(Math.random() * aIdxs.length)];
-      bi = bIdxs[Math.floor(Math.random() * bIdxs.length)];
-      pa = a.prices[ai];
-      pb = b.prices[bi];
-      tries++;
-    } while ((a.label === b.label || pa === pb) && tries < 40);
-    return {
-      mode: mode,
-      prompt: {
-        title: 'ЧТО ДОРОЖЕ?',
-        tier: ''
-      },
-      options: [{
-        label: a.label,
-        sub: TR_TIERS[ai],
-        value: 'a',
-        price: pa
-      }, {
-        label: b.label,
-        sub: TR_TIERS[bi],
-        value: 'b',
-        price: pb
-      }],
-      correctValue: pa > pb ? 'a' : 'b'
-    };
   }
 
   function PriceTierChoices(props) {
@@ -4035,6 +4011,8 @@ var PRICE_2026 = {
     var priceTier = priceTierState[0], setPriceTier = priceTierState[1];
     var serviceTierState = React.useState(PRICE_TIERS[0].key);
     var serviceTier = serviceTierState[0], setServiceTier = serviceTierState[1];
+    var comparisonTierState = React.useState(PRICE_TIERS[0].key);
+    var comparisonTier = comparisonTierState[0], setComparisonTier = comparisonTierState[1];
     var _React$useState17 = React.useState(null),
       _React$useState18 = _slicedToArray(_React$useState17, 2),
       mode = _React$useState18[0],
@@ -4060,12 +4038,14 @@ var PRICE_2026 = {
       done = _React$useState28[0],
       setDone = _React$useState28[1];
     function start(m, tierKey) {
-      if ((m === 'price' || m === 'service') && !tierKey) {
+      if (m === 'exam') { setMode(m); return; }
+      if ((m === 'price' || m === 'service' || m === 'compare') && !tierKey) {
         setMode(m + '-pick');
         return;
       }
       var qs = [];
-      for (var i = 0; i < TOTAL_Q; i++) qs.push(m === 'price' ? makePriceQuestion(tierKey) : m === 'service' ? makeServiceQuestion(tierKey) : makeQuestion(m));
+      for (var i = 0; i < TOTAL_Q; i++) qs.push(m === 'price' ? makePriceQuestion(tierKey) : m === 'service' ? makeServiceQuestion(tierKey) : makeComparisonQuestion(tierKey));
+      if (qs.some(function (question) { return !question; })) { setMode(m + '-pick'); return; }
       setMode(m);
       setQuestions(qs);
       setQIdx(0);
@@ -4093,19 +4073,22 @@ var PRICE_2026 = {
     }
 
     // ── EXAM MODE ─────────────────────────────────────────────
-    if (mode === 'price-pick' || mode === 'service-pick') {
-      var isServicePick = mode === 'service-pick';
-      var selectedTierKey = isServicePick ? serviceTier : priceTier;
+    if (mode === 'price-pick' || mode === 'service-pick' || mode === 'compare-pick') {
+      var setupMode = mode.replace('-pick', '');
+      var selectedTierKey = setupMode === 'price' ? priceTier : setupMode === 'service' ? serviceTier : comparisonTier;
+      var changeTier = setupMode === 'price' ? setPriceTier : setupMode === 'service' ? setServiceTier : setComparisonTier;
+      var noComparisonPairs = setupMode === 'compare' && getComparisonPairs(selectedTierKey).length === 0;
       return React.createElement('div', { className: 'tab-trainer' },
         React.createElement('div', { className: 'tr-head tr-head-play' },
           React.createElement('div', null,
-            React.createElement('div', { className: 'kicker' }, isServicePick ? '03 / УГАДАЙ УСЛУГУ' : '03 / УГАДАЙ ЦЕНУ'),
+            React.createElement('div', { className: 'kicker' }, '03 / ' + MODES.find(function (item) { return item.key === setupMode; }).title),
             React.createElement('h2', { className: 'tr-title' }, 'ВЫБЕРИ ГРАДАЦИЮ'),
             React.createElement('div', { className: 'meta-sub' }, 'Прайс 2026 · 15 вопросов · без таймера')),
           React.createElement('button', { className: 'btn-ghost btn-sm', onClick: exitToMenu }, '← назад')),
-        React.createElement(PriceTierChoices, { name: isServicePick ? 'trainer-service-tier' : 'trainer-price-tier', value: selectedTierKey, onChange: isServicePick ? setServiceTier : setPriceTier }),
+        React.createElement(PriceTierChoices, { name: 'trainer-' + setupMode + '-tier', value: selectedTierKey, onChange: changeTier }),
+        noComparisonPairs && React.createElement('p', { className: 'tr-meta' }, 'Для этой градации нет услуг с ценами, которые можно однозначно сравнить.'),
         React.createElement('div', { className: 'tr-result-actions' },
-          React.createElement('button', { className: 'btn-prim', onClick: function () { start(isServicePick ? 'service' : 'price', selectedTierKey); } }, 'НАЧАТЬ →')));
+          React.createElement('button', { className: 'btn-prim', disabled: noComparisonPairs, onClick: function () { start(setupMode, selectedTierKey); } }, 'НАЧАТЬ →')));
     }
     if (mode === 'exam') {
       return /*#__PURE__*/React.createElement(ExamMode, {
@@ -4169,7 +4152,7 @@ var PRICE_2026 = {
       }, /*#__PURE__*/React.createElement("button", {
         className: "btn-prim",
         onClick: function onClick() {
-          return start(mode, mode === 'price' ? priceTier : mode === 'service' ? serviceTier : null);
+          return start(mode, mode === 'price' ? priceTier : mode === 'service' ? serviceTier : comparisonTier);
         }
       }, "\u0415\u0429\u0401 \u0420\u0410\u0417"), /*#__PURE__*/React.createElement("button", {
         className: "btn-ghost",
@@ -4265,7 +4248,7 @@ var PRICE_2026 = {
         className: "cmp-tier"
       }, o.sub), picked && /*#__PURE__*/React.createElement("div", {
         className: "cmp-price"
-      }, fmtRub2(o.price), "\xA0\u20BD"));
+      }, formatPriceAnswer(o.price)));
     }))), /*#__PURE__*/React.createElement("div", {
       className: "tr-footer"
     }, picked ? /*#__PURE__*/React.createElement("button", {

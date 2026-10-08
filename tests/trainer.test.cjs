@@ -10,8 +10,9 @@ ctx.window.BRITVA = { ALL_SERVICES: [{ label: 'Legacy only', prices: [11, 22, 33
 const originalLegacy = JSON.stringify(ctx.window.BRITVA);
 const trainerStart = html.indexOf('(function () {', html.indexOf('// TAB: ТРЕНАЖЁР'));
 const trainerEnd = html.indexOf('// ── ЗАЧЁТ ПРАЙСА', trainerStart);
-vm.runInContext(html.slice(trainerStart, trainerEnd) + '\nwindow.trainerTest = { PRICE_TIERS, getPriceEntries, makePriceQuestion, makeServiceQuestion, priceKey, pricesOverlap, formatPriceAnswer, makeQuestion }; })();', ctx);
+vm.runInContext(html.slice(trainerStart, trainerEnd) + '\nwindow.trainerTest = { PRICE_TIERS, getPriceEntries, makePriceQuestion, makeServiceQuestion, priceKey, pricesOverlap, getComparisonPairs, makeComparisonQuestion, formatPriceAnswer }; })();', ctx);
 const api = ctx.window.trainerTest;
+const sourceBounds = value => String(value).replace(/[\s₽]/g, '').split(/[–—-]/).map(Number);
 assert.deepEqual(Array.from(api.PRICE_TIERS, tier => tier.label), ['БАРБЕР', 'БАРБЕР+', 'ТОП-БАРБЕР', 'ТОП+', 'БРЕНД-БАРБЕР', 'БРЕНД-БАРБЕР+']);
 for (const tier of api.PRICE_TIERS) {
   const entries = api.getPriceEntries(tier.key);
@@ -48,6 +49,28 @@ for (const tier of api.PRICE_TIERS) {
     }
   }
   delete ctx.Math.random;
+  const pairs = api.getComparisonPairs(tier.key);
+  assert(pairs.length > 0);
+  assert(pairs.some(pair => pair.some(entry => typeof entry.price === 'string')), 'Ranges participate in valid comparisons');
+  for (const entry of entries) assert(pairs.some(pair => pair.some(candidate => candidate.name === entry.name && candidate.price === entry.price)), 'Every priced service can participate');
+  for (const [left, right] of pairs) {
+    const a = sourceBounds(left.price), b = sourceBounds(right.price);
+    assert(left.name !== right.name);
+    assert(Math.max(...a) < Math.min(...b) || Math.max(...b) < Math.min(...a));
+  }
+  for (let i = 0; i < 50; i++) {
+    const question = api.makeComparisonQuestion(tier.key);
+    assert.equal(question.mode, 'compare');
+    assert.equal(question.prompt.tier, tier.label);
+    assert.deepEqual(Array.from(question.options, option => option.value), ['a', 'b']);
+    for (const option of question.options) {
+      assert.equal(option.sub, tier.label);
+      assert(entries.some(entry => entry.name === option.label && entry.price === option.price));
+    }
+    const left = sourceBounds(question.options[0].price), right = sourceBounds(question.options[1].price);
+    const expected = Math.min(...left) > Math.max(...right) ? 'a' : 'b';
+    assert.equal(question.correctValue, expected);
+  }
 }
 assert.equal(api.getPriceEntries('unknown').length, 0);
 const fixture = { title: 'Fixture', items: [{ name: 'Free', prices: [0, null] }, { name: 'Missing', prices: [null, null] }] };
@@ -55,6 +78,7 @@ ctx.PRICE_2026.groups[0].categories.push(fixture);
 assert(api.getPriceEntries('barber:0').some(entry => entry.name === 'Free' && entry.price === 0));
 assert(!api.getPriceEntries('barber:1').some(entry => entry.name === 'Free'));
 assert(!api.getPriceEntries('barber:0').some(entry => entry.name === 'Missing'));
+assert(api.getComparisonPairs('barber:0').some(pair => pair.some(entry => entry.price === 0)));
 const withZero = api.getPriceEntries('barber:0');
 ctx.Math.random = () => (withZero.length - 0.5) / withZero.length;
 assert.equal(api.makeServiceQuestion('barber:0').prompt.title, api.formatPriceAnswer(0));
@@ -69,10 +93,23 @@ assert.match(api.formatPriceAnswer(0), /^0\s₽$/);
 const range = api.getPriceEntries('barber:0').find(entry => typeof entry.price === 'string');
 assert(range, 'Ranges must remain eligible questions');
 assert.equal(api.formatPriceAnswer(range.price).replace(/\s*₽$/, ''), range.price.replace(/\s*₽$/, ''));
-assert.equal(JSON.stringify(ctx.window.BRITVA), originalLegacy, 'Other trainer modes and calculator data stay unchanged');
+assert.equal(JSON.stringify(ctx.window.BRITVA), originalLegacy, 'Calculator data stays unchanged');
 assert.equal(api.priceKey('2 000 — 4 000 ₽'), api.priceKey('2000–4000'));
 assert(api.pricesOverlap('2000–4000 ₽', 3000));
 assert(api.pricesOverlap('2000–4000 ₽', '4000–5000 ₽'));
 assert(!api.pricesOverlap('2000–4000 ₽', 4500));
-assert(api.makeQuestion('compare').options.every(option => option.label === 'Legacy only'));
-console.log('PASS: price and service quizzes use six 2026 grades; every service has one correct offered answer, shared services, subscriptions, ranges, zero/missing prices; legacy comparison data unchanged.');
+const originalCategories = ctx.PRICE_2026.groups[0].categories;
+const originalShared = ctx.PRICE_2026.sharedCategories;
+ctx.PRICE_2026.sharedCategories = [];
+ctx.PRICE_2026.groups[0].categories = [{ title: 'Fixture', items: [
+  {name:'Range', prices:['100–200 ₽',null]}, {name:'Inside', prices:[150,null]},
+  {name:'Same range', prices:['100 - 200 ₽',null]}, {name:'Missing',prices:[null,null]}
+] }];
+assert.equal(api.getComparisonPairs('barber:0').length, 0);
+assert.equal(api.makeComparisonQuestion('barber:0'), null);
+assert.equal(api.makeComparisonQuestion('unknown'), null);
+ctx.PRICE_2026.groups[0].categories[0].items.push({name:'Higher',prices:[300,null]});
+assert.equal(api.getComparisonPairs('barber:0').length, 3);
+ctx.PRICE_2026.groups[0].categories = originalCategories;
+ctx.PRICE_2026.sharedCategories = originalShared;
+console.log('PASS: all quiz modes use six 2026 grades; source prices, unambiguous comparisons and service answers, shared services, subscriptions, ranges, zero/missing prices; calculator data unchanged.');
