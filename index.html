@@ -1811,6 +1811,13 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; }
 .exam-entered { font-family: var(--f-cn); font-weight: 300; font-size: 13px; color: #e05; text-decoration: line-through; }
 .exam-correct { font-family: var(--f-cn); font-weight: 700; font-size: 14px; color: var(--lime); }
 .exam-review-tier.is-ok .exam-correct { color: var(--text-mute); font-weight: 400; font-size: 13px; }
+.exam-range-hint { margin: 0 0 16px; }
+.exam-page .tr-head { flex-wrap: wrap; gap: 12px; }
+.exam-page .tr-head-l { min-width: 0; }
+.exam-review-tier { flex-wrap: wrap; min-width: 0; }
+.exam-review-name { overflow-wrap: anywhere; }
+.exam-cat-card { min-width: 0; }
+.exam-cat-title { overflow-wrap: anywhere; }
 @media (max-width: 760px) {
   .exam-verdict { font-size: 48px; }
   .exam-cat-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -1820,6 +1827,9 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; }
   .exam-flat-input-wrap { width: 100%; }
   .exam-review-tiers { flex-direction: column; }
   .exam-review-tier { width: 100%; }
+}
+@media (max-width: 480px) {
+  .exam-cat-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ═══ БАР ════════════════════════════════════════════════════ */
@@ -3882,349 +3892,143 @@ var PRICE_2026 = {
     };
   }
 
+  function PriceTierChoices(props) {
+    var h = React.createElement;
+    return h('div', { className: 'tr-price-tiers', role: 'radiogroup', 'aria-label': 'Градация для тренировки' },
+      PRICE_TIERS.map(function (tier) {
+        return h('label', { key: tier.key, className: 'tr-price-tier' + (props.value === tier.key ? ' is-selected' : '') },
+          h('input', {
+            type: 'radio', name: props.name, value: tier.key, checked: props.value === tier.key,
+            onChange: function () { props.onChange(tier.key); }
+          }), h('span', null, tier.label));
+      }));
+  }
+
   // ── ЗАЧЁТ ПРАЙСА ─────────────────────────────────────────────
-  function ExamMode(_ref5) {
-    var onExit = _ref5.onExit;
-    var _React$useState1 = React.useState('pick'),
-      _React$useState10 = _slicedToArray(_React$useState1, 2),
-      phase = _React$useState10[0],
-      setPhase = _React$useState10[1];
-    var _React$useState11 = React.useState(null),
-      _React$useState12 = _slicedToArray(_React$useState11, 2),
-      activeCat = _React$useState12[0],
-      setActiveCat = _React$useState12[1];
-    var _React$useState13 = React.useState([]),
-      _React$useState14 = _slicedToArray(_React$useState13, 2),
-      items = _React$useState14[0],
-      setItems = _React$useState14[1];
-    var _React$useState15 = React.useState(null),
-      _React$useState16 = _slicedToArray(_React$useState15, 2),
-      results = _React$useState16[0],
-      setResults = _React$useState16[1];
-
-    // Check if all items in a category have identical prices across tiers
-    // Items with examPrice are handled separately and don't affect this check
-    function isFlatCat(cat) {
-      var relevant = cat.items.filter(function (it) {
-        return it.examPrice == null;
+  function getExamCategories(tierKey) {
+    var categories = [];
+    getPriceEntries(tierKey).forEach(function (entry) {
+      var category = categories.find(function (cat) { return cat.title === entry.category; });
+      if (!category) {
+        category = { title: entry.category, items: [] };
+        categories.push(category);
+      }
+      category.items.push({
+        id: tierKey + ':' + categories.indexOf(category) + ':' + category.items.length,
+        name: entry.name, tier: entry.tier, correct: entry.price, input: ''
       });
-      if (relevant.length === 0) return true;
-      return relevant.every(function (it) {
-        var nums = it.prices.filter(function (p) {
-          return typeof p === 'number' && p > 0;
-        });
-        return nums.length > 0 && nums.every(function (p) {
-          return p === nums[0];
-        });
+    });
+    return categories;
+  }
+  function normalizeExamAnswer(value) {
+    var clean = String(value).replace(/[\s₽]/g, '').replace(/[–—]/g, '-');
+    if (!/^\d+(?:-\d+)?$/.test(clean)) return null;
+    return clean.split('-').map(function (part) { return String(Number(part)); }).join('-');
+  }
+  function checkExamItems(items) {
+    var checked = items.map(function (item) {
+      var entered = item.input.trim();
+      var normalized = normalizeExamAnswer(entered);
+      return Object.assign({}, item, {
+        entered: entered,
+        ok: normalized !== null && normalized === normalizeExamAnswer(item.correct)
       });
-    }
-    function buildItems(cat) {
-      var flat = isFlatCat(cat);
-      var out = [];
-      cat.items.forEach(function (it, itemIdx) {
-        var name = it.note ? "".concat(it.name, " (").concat(it.note, ")") : it.name;
-
-        // If item has an explicit examPrice — always add as single flat entry
-        if (it.examPrice != null) {
-          out.push({
-            id: "".concat(cat.key, "__item").concat(itemIdx, "__exam"),
-            name: name,
-            tier: null,
-            correct: it.examPrice,
-            input: ''
-          });
-          return;
-        }
-        if (flat) {
-          var price = it.prices.find(function (p) {
-            return typeof p === 'number' && p > 0;
-          });
-          if (price != null) {
-            out.push({
-              id: "".concat(cat.key, "__item").concat(itemIdx),
-              name: name,
-              tier: null,
-              correct: price,
-              input: ''
-            });
-          }
-        } else {
-          it.prices.forEach(function (p, ti) {
-            if (typeof p === 'number' && p > 0) {
-              out.push({
-                id: "".concat(cat.key, "__item").concat(itemIdx, "__tier").concat(ti),
-                name: name,
-                tier: window.BRITVA.TIERS[ti],
-                correct: p,
-                input: ''
-              });
-            }
-          });
-        }
-      });
-      return out;
-    }
-    function startCat(cat) {
-      setActiveCat(cat);
-      setItems(buildItems(cat));
+    });
+    var errors = checked.filter(function (item) { return !item.ok; }).length;
+    return { checked: checked, errors: errors, passed: errors <= Math.ceil(items.length * 0.2) };
+  }
+  function ExamMode(props) {
+    var h = React.createElement;
+    var phaseState = React.useState('grade'), phase = phaseState[0], setPhase = phaseState[1];
+    var tierState = React.useState(PRICE_TIERS[0].key), tierKey = tierState[0], setTierKey = tierState[1];
+    var catState = React.useState(null), activeCat = catState[0], setActiveCat = catState[1];
+    var itemsState = React.useState([]), items = itemsState[0], setItems = itemsState[1];
+    var resultsState = React.useState(null), results = resultsState[0], setResults = resultsState[1];
+    var tier = PRICE_TIERS.find(function (entry) { return entry.key === tierKey; });
+    function startCat(category) {
+      setActiveCat(category);
+      setItems(category.items.map(function (item) { return Object.assign({}, item, { input: '' }); }));
       setResults(null);
       setPhase('test');
     }
-    function handleInput(id, val) {
-      var clean = val.replace(/[^0-9]/g, '');
-      setItems(function (prev) {
-        return prev.map(function (it) {
-          return it.id === id ? _objectSpread(_objectSpread({}, it), {}, {
-            input: clean
-          }) : it;
+    function handleInput(id, value) {
+      var clean = value.replace(/[^0-9\s–—-]/g, '');
+      setItems(function (previous) {
+        return previous.map(function (item) {
+          return item.id === id ? Object.assign({}, item, { input: clean }) : item;
         });
       });
     }
-    function handleSubmit() {
-      var checked = items.map(function (it) {
-        var entered = parseInt(it.input, 10);
-        return _objectSpread(_objectSpread({}, it), {}, {
-          ok: entered === it.correct,
-          entered: entered
-        });
-      });
-      var errors = checked.filter(function (it) {
-        return !it.ok;
-      }).length;
-      setResults({
-        checked: checked,
-        errors: errors,
-        passed: errors <= Math.ceil(items.length * 0.2)
-      });
-      setPhase('result');
+    function header(title, backLabel, onBack) {
+      return h('div', { className: 'tr-head tr-head-play' },
+        h('div', { className: 'tr-head-l' },
+          h('div', { className: 'kicker' }, '03 / ЗАЧЁТ ПРАЙСА' + (activeCat && (phase === 'test' || phase === 'result') ? ' — ' + activeCat.title : '')),
+          h('h2', { className: 'tr-title' }, title),
+          h('div', { className: 'tr-meta' }, 'Прайс 2026' + (phase === 'grade' ? '' : ' · ' + tier.label))),
+        h('button', { className: 'btn-ghost btn-sm', onClick: onBack }, backLabel));
     }
-
-    // ── PICK ───────────────────────────────────────────────────
+    if (phase === 'grade') {
+      return h('div', { className: 'tab-trainer exam-page' },
+        header('ВЫБЕРИ ГРАДАЦИЮ', '← назад', props.onExit),
+        h(PriceTierChoices, { name: 'trainer-exam-tier', value: tierKey, onChange: setTierKey }),
+        h('div', { className: 'tr-result-actions' },
+          h('button', { className: 'btn-prim', onClick: function () { setPhase('pick'); } }, 'ВЫБРАТЬ КАТЕГОРИЮ →')));
+    }
     if (phase === 'pick') {
-      var cats = window.BRITVA.PRICE_CATEGORIES.filter(function (cat) {
-        return cat.items.some(function (it) {
-          return it.prices.some(function (p) {
-            return typeof p === 'number' && p > 0;
-          });
-        });
-      });
-      return /*#__PURE__*/React.createElement("div", {
-        className: "tab-trainer"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "tr-head tr-head-play"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "tr-head-l"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "kicker"
-      }, "03 / \u0417\u0410\u0427\u0401\u0422 \u041F\u0420\u0410\u0419\u0421\u0410"), /*#__PURE__*/React.createElement("h2", {
-        className: "tr-title"
-      }, "\u0412\u042B\u0411\u0415\u0420\u0418 \u041A\u0410\u0422\u0415\u0413\u041E\u0420\u0418\u042E")), /*#__PURE__*/React.createElement("button", {
-        className: "btn-ghost btn-sm",
-        onClick: onExit
-      }, "\xD7 \u0432\u044B\u0439\u0442\u0438")), /*#__PURE__*/React.createElement("div", {
-        className: "exam-cat-grid"
-      }, cats.map(function (cat, i) {
-        var flat = isFlatCat(cat);
-        var count = flat ? cat.items.filter(function (it) {
-          return it.prices.some(function (p) {
-            return typeof p === 'number' && p > 0;
-          });
-        }).length : cat.items.reduce(function (a, it) {
-          return a + it.prices.filter(function (p) {
-            return typeof p === 'number' && p > 0;
-          }).length;
-        }, 0);
-        return /*#__PURE__*/React.createElement("button", {
-          key: cat.key,
-          className: "exam-cat-card",
-          onClick: function onClick() {
-            return startCat(cat);
-          }
-        }, /*#__PURE__*/React.createElement("div", {
-          className: "exam-cat-num"
-        }, "0", i + 1), /*#__PURE__*/React.createElement("div", {
-          className: "exam-cat-title"
-        }, cat.title), /*#__PURE__*/React.createElement("div", {
-          className: "exam-cat-count"
-        }, count, " ", flat ? 'услуг' : 'цен'), /*#__PURE__*/React.createElement("div", {
-          className: "exam-cat-arrow"
-        }, "\u2192 \u043D\u0430\u0447\u0430\u0442\u044C"));
-      })));
+      return h('div', { className: 'tab-trainer exam-page' },
+        header('ВЫБЕРИ КАТЕГОРИЮ', '← градации', function () { setPhase('grade'); }),
+        h('div', { className: 'exam-cat-grid' }, getExamCategories(tierKey).map(function (category, index) {
+          return h('button', { key: category.title, className: 'exam-cat-card', onClick: function () { startCat(category); } },
+            h('div', { className: 'exam-cat-num' }, String(index + 1).padStart(2, '0')),
+            h('div', { className: 'exam-cat-title' }, category.title),
+            h('div', { className: 'exam-cat-count' }, 'Позиций: ' + category.items.length),
+            h('div', { className: 'exam-cat-arrow' }, '→ начать'));
+        })));
     }
-
-    // ── TEST ───────────────────────────────────────────────────
     if (phase === 'test') {
-      var flat = isFlatCat(activeCat);
-
-      // Group by name (for non-flat)
-      var grouped = [];
-      items.forEach(function (it) {
-        var existing = grouped.find(function (g) {
-          return g.name === it.name;
-        });
-        if (existing) existing.tiers.push(it);else grouped.push({
-          name: it.name,
-          tiers: [it]
-        });
-      });
-      return /*#__PURE__*/React.createElement("div", {
-        className: "tab-trainer"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "tr-head tr-head-play"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "tr-head-l"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "kicker"
-      }, "03 / \u0417\u0410\u0427\u0401\u0422 \u2014 ", activeCat.title), /*#__PURE__*/React.createElement("div", {
-        className: "tr-meta"
-      }, flat ? 'одна цена для всех мастеров' : 'впиши все цены · все тиры')), /*#__PURE__*/React.createElement("button", {
-        className: "btn-ghost btn-sm",
-        onClick: function onClick() {
-          return setPhase('pick');
-        }
-      }, "\u2190 \u043D\u0430\u0437\u0430\u0434")), /*#__PURE__*/React.createElement("div", {
-        className: "exam-list"
-      }, flat ?
-      // Flat: one input per service, no tier label
-      items.map(function (it) {
-        return /*#__PURE__*/React.createElement("div", {
-          key: it.id,
-          className: "exam-group exam-group-flat"
-        }, /*#__PURE__*/React.createElement("div", {
-          className: "exam-group-name"
-        }, it.name), /*#__PURE__*/React.createElement("div", {
-          className: "exam-flat-input-wrap"
-        }, /*#__PURE__*/React.createElement("input", {
-          className: "exam-input",
-          type: "text",
-          inputMode: "numeric",
-          placeholder: "\u20BD",
-          value: it.input,
-          onChange: function onChange(e) {
-            return handleInput(it.id, e.target.value);
-          }
-        })));
-      }) :
-      // Non-flat: grouped by service, tier rows
-      grouped.map(function (group, gi) {
-        return /*#__PURE__*/React.createElement("div", {
-          key: "group-".concat(gi),
-          className: "exam-group"
-        }, /*#__PURE__*/React.createElement("div", {
-          className: "exam-group-name"
-        }, group.name), /*#__PURE__*/React.createElement("div", {
-          className: "exam-group-tiers"
-        }, group.tiers.map(function (it) {
-          return /*#__PURE__*/React.createElement("div", {
-            key: it.id,
-            className: "exam-tier-row"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "exam-tier-label"
-          }, it.tier), /*#__PURE__*/React.createElement("input", {
-            className: "exam-input",
-            type: "text",
-            inputMode: "numeric",
-            placeholder: "\u20BD",
-            value: it.input,
-            onChange: function onChange(e) {
-              return handleInput(it.id, e.target.value);
-            }
-          }));
-        })));
-      })), /*#__PURE__*/React.createElement("div", {
-        className: "exam-submit-row"
-      }, /*#__PURE__*/React.createElement("button", {
-        className: "btn-prim exam-submit-btn",
-        onClick: handleSubmit
-      }, "\u0421\u0414\u0410\u0422\u042C \u2192")));
+      var hasRanges = items.some(function (item) { return normalizeExamAnswer(item.correct).indexOf('-') !== -1; });
+      return h('div', { className: 'tab-trainer exam-page' },
+        header('ВПИШИ ЦЕНЫ', '← категории', function () { setPhase('pick'); }),
+        hasRanges && h('p', { className: 'tr-meta exam-range-hint', id: 'exam-range-hint' }, 'Для диапазона укажи обе границы через тире: от–до.'),
+        h('div', { className: 'exam-list' }, items.map(function (item) {
+          var isRange = normalizeExamAnswer(item.correct).indexOf('-') !== -1;
+          var inputId = 'exam-answer-' + item.id;
+          return h('div', { key: item.id, className: 'exam-group exam-group-flat' },
+            h('label', { className: 'exam-group-name', htmlFor: inputId }, item.name),
+            h('div', { className: 'exam-flat-input-wrap' }, h('input', {
+              id: inputId, className: 'exam-input', type: 'text', inputMode: isRange ? 'text' : 'numeric',
+              placeholder: isRange ? 'от–до ₽' : '₽', value: item.input, autoComplete: 'off',
+              'aria-describedby': isRange ? 'exam-range-hint' : undefined,
+              onChange: function (event) { handleInput(item.id, event.target.value); }
+            })));
+        })),
+        h('div', { className: 'exam-submit-row' }, h('button', {
+          className: 'btn-prim exam-submit-btn', onClick: function () { setResults(checkExamItems(items)); setPhase('result'); }
+        }, 'СДАТЬ →')));
     }
-
-    // ── RESULT ─────────────────────────────────────────────────
     if (phase === 'result') {
-      var checked = results.checked,
-        errors = results.errors,
-        passed = results.passed;
-      var total = checked.length;
-      var correct = total - errors;
-      var _flat = isFlatCat(activeCat);
-      var _grouped = [];
-      checked.forEach(function (it) {
-        var existing = _grouped.find(function (g) {
-          return g.name === it.name;
-        });
-        if (existing) existing.tiers.push(it);else _grouped.push({
-          name: it.name,
-          tiers: [it]
-        });
-      });
-      return /*#__PURE__*/React.createElement("div", {
-        className: "tab-trainer"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "tr-head tr-head-play"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "tr-head-l"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "kicker"
-      }, "03 / \u0420\u0415\u0417\u0423\u041B\u042C\u0422\u0410\u0422 \u2014 ", activeCat.title)), /*#__PURE__*/React.createElement("button", {
-        className: "btn-ghost btn-sm",
-        onClick: function onClick() {
-          return setPhase('pick');
-        }
-      }, "\u2190 \u043A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u0438")), /*#__PURE__*/React.createElement("div", {
-        className: "exam-result"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "exam-verdict".concat(passed ? ' is-pass' : ' is-fail')
-      }, passed ? 'СДАЛ' : 'ИДИ УЧИ!'), /*#__PURE__*/React.createElement("div", {
-        className: "exam-stat"
-      }, "\u0432\u0435\u0440\u043D\u043E: ", /*#__PURE__*/React.createElement("b", null, correct), " \u0438\u0437 ", /*#__PURE__*/React.createElement("b", null, total), !passed && /*#__PURE__*/React.createElement("span", {
-        className: "exam-stat-fail"
-      }, " \u2014 \u043E\u0448\u0438\u0431\u043E\u043A: ", errors)), /*#__PURE__*/React.createElement("div", {
-        className: "exam-review"
-      }, _grouped.map(function (group, gi) {
-        var allOk = group.tiers.every(function (t) {
-          return t.ok;
-        });
-        return /*#__PURE__*/React.createElement("div", {
-          key: gi,
-          className: "exam-review-group".concat(allOk ? ' is-ok' : ' is-err')
-        }, /*#__PURE__*/React.createElement("div", {
-          className: "exam-review-name"
-        }, /*#__PURE__*/React.createElement("span", {
-          className: "exam-review-icon"
-        }, allOk ? '✓' : '✗'), group.name), /*#__PURE__*/React.createElement("div", {
-          className: "exam-review-tiers"
-        }, group.tiers.map(function (it) {
-          return /*#__PURE__*/React.createElement("div", {
-            key: it.id,
-            className: "exam-review-tier".concat(it.ok ? ' is-ok' : ' is-err')
-          }, it.tier && /*#__PURE__*/React.createElement("span", {
-            className: "exam-review-tier-label"
-          }, it.tier), it.ok ? /*#__PURE__*/React.createElement("span", {
-            className: "exam-correct"
-          }, it.correct.toLocaleString('ru-RU'), " \u20BD") : /*#__PURE__*/React.createElement("span", {
-            className: "exam-wrong-wrap"
-          }, /*#__PURE__*/React.createElement("span", {
-            className: "exam-entered"
-          }, it.entered ? it.entered.toLocaleString('ru-RU') + ' ₽' : '—'), /*#__PURE__*/React.createElement("span", {
-            className: "exam-correct"
-          }, it.correct.toLocaleString('ru-RU'), " \u20BD")));
-        })));
-      })), /*#__PURE__*/React.createElement("div", {
-        className: "tr-result-actions"
-      }, /*#__PURE__*/React.createElement("button", {
-        className: "btn-prim",
-        onClick: function onClick() {
-          return startCat(activeCat);
-        }
-      }, "\u0415\u0429\u0401 \u0420\u0410\u0417"), /*#__PURE__*/React.createElement("button", {
-        className: "btn-ghost",
-        onClick: function onClick() {
-          return setPhase('pick');
-        }
-      }, "\u0414\u0420\u0423\u0413\u0410\u042F \u041A\u0410\u0422\u0415\u0413\u041E\u0420\u0418\u042F"))));
+      return h('div', { className: 'tab-trainer exam-page' },
+        header('РЕЗУЛЬТАТ', '← категории', function () { setPhase('pick'); }),
+        h('div', { className: 'exam-result' },
+          h('div', { className: 'exam-verdict' + (results.passed ? ' is-pass' : ' is-fail') }, results.passed ? 'СДАЛ' : 'ИДИ УЧИ!'),
+          h('div', { className: 'exam-stat' }, 'верно: ', h('b', null, items.length - results.errors), ' из ', h('b', null, items.length),
+            !results.passed && h('span', { className: 'exam-stat-fail' }, ' — ошибок: ' + results.errors)),
+          h('div', { className: 'exam-review' }, results.checked.map(function (item) {
+            return h('div', { key: item.id, className: 'exam-review-group' + (item.ok ? ' is-ok' : ' is-err') },
+              h('div', { className: 'exam-review-name' }, h('span', { className: 'exam-review-icon' }, item.ok ? '✓' : '✗'), item.name),
+              h('div', { className: 'exam-review-tiers' },
+                h('div', { className: 'exam-review-tier' + (item.ok ? ' is-ok' : ' is-err') },
+                  h('span', { className: 'exam-review-tier-label' }, item.tier),
+                  !item.ok && h('span', { className: 'exam-entered' }, item.entered === '' ? '—' : item.entered + ' ₽'),
+                  h('span', { className: 'exam-correct' }, formatPriceAnswer(item.correct)))));
+          })),
+          h('div', { className: 'tr-result-actions' },
+            h('button', { className: 'btn-prim', onClick: function () { startCat(activeCat); } }, 'ЕЩЁ РАЗ'),
+            h('button', { className: 'btn-ghost', onClick: function () { setPhase('pick'); } }, 'ДРУГАЯ КАТЕГОРИЯ'))));
     }
     return null;
   }
+
   function TabTrainer() {
     var priceTierState = React.useState(PRICE_TIERS[0].key);
     var priceTier = priceTierState[0], setPriceTier = priceTierState[1];
@@ -4294,15 +4098,7 @@ var PRICE_2026 = {
             React.createElement('h2', { className: 'tr-title' }, 'ВЫБЕРИ ГРАДАЦИЮ'),
             React.createElement('div', { className: 'meta-sub' }, 'Прайс 2026 · 15 вопросов · без таймера')),
           React.createElement('button', { className: 'btn-ghost btn-sm', onClick: exitToMenu }, '← назад')),
-        React.createElement('div', { className: 'tr-price-tiers', role: 'radiogroup', 'aria-label': 'Градация для тренировки' },
-          PRICE_TIERS.map(function (tier) {
-            return React.createElement('label', { key: tier.key, className: 'tr-price-tier' + (priceTier === tier.key ? ' is-selected' : '') },
-              React.createElement('input', {
-                type: 'radio', name: 'trainer-price-tier', value: tier.key, checked: priceTier === tier.key,
-                onChange: function () { setPriceTier(tier.key); }
-              }),
-              React.createElement('span', null, tier.label));
-          })),
+        React.createElement(PriceTierChoices, { name: 'trainer-price-tier', value: priceTier, onChange: setPriceTier }),
         React.createElement('div', { className: 'tr-result-actions' },
           React.createElement('button', { className: 'btn-prim', onClick: function () { start('price', priceTier); } }, 'НАЧАТЬ →')));
     }
