@@ -1953,6 +1953,71 @@ body {
 .kpi-occ-track{height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden}
 .kpi-occ-fill{height:100%;background:linear-gradient(90deg,rgba(166,206,57,0.5),#A6CE39);border-radius:3px;box-shadow:0 0 10px rgba(166,206,57,0.4);transition:width .6s ease}
 .kpi-occ-line{display:flex;justify-content:space-between;margin-bottom:6px}
+/* Paired 2026 price list / native sliding tabs. Scoped away from training tables. */
+.rate-page { min-width: 0; }
+.rate-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; padding:6px 0 24px; }
+.rate-eyebrow { font-family:var(--f-cn); color:var(--text-dim); font-size:11px; letter-spacing:.18em; margin-bottom:10px; }
+.rate-heading h1 { font-family:var(--f-ext); font-weight:700; font-style:italic; font-size:clamp(20px, 3vw, 34px); letter-spacing:.04em; }
+.rate-edition { display:flex; flex-direction:column; gap:5px; text-align:right; font-family:var(--f-cn); color:var(--text-dim); font-size:14px; letter-spacing:.06em; flex-shrink:0; }
+.rate-edition span:first-child { color:var(--lime); }
+.rate-tabs-scroll { max-width:100%; padding:8px 0 26px; }
+.rate-tabs { display:inline-flex; position:relative; isolation:isolate; gap:4px; padding:6px; max-width:100%; border:1px solid var(--line-2); border-radius:14px; background:var(--panel); }
+.rate-tabs-indicator { position:absolute; left:0; top:6px; bottom:6px; border-radius:9px; background:linear-gradient(100deg,#A6CE39,#9BBB46); box-shadow:0 0 20px rgba(166,206,57,.16); pointer-events:none; transition:transform .32s cubic-bezier(.22,1,.36,1),width .32s cubic-bezier(.22,1,.36,1); }
+.rate-tab { position:relative; z-index:1; min-height:46px; padding:12px 24px; border-radius:9px; font-family:var(--f-ext); font-weight:700; font-size:12px; letter-spacing:.025em; white-space:nowrap; text-transform:uppercase; color:var(--text-dim); transition:color .16s; }
+.rate-tab:hover { color:var(--text); }
+.rate-tab.is-selected { color:#070604; }
+.rate-tab:focus-visible { outline:2px solid white; outline-offset:3px; }
+.rate-panel:focus-visible { outline:2px solid var(--lime); outline-offset:4px; }
+.rate-panel[hidden] { display:none; }
+.rate-table { width:100%; table-layout:fixed; border-collapse:collapse; text-align:left; }
+.rate-table col { width:23%; }
+.rate-table col.rate-service-col { width:54%; }
+.rate-table thead th { padding:16px 18px 22px; border-top:1px solid var(--line); border-bottom:1px solid var(--line-2); text-align:right; vertical-align:bottom; }
+.rate-table thead th.rate-service-heading { text-align:left; color:var(--text-mute); font-family:var(--f-cn); font-weight:500; font-size:13px; text-transform:uppercase; letter-spacing:.15em; }
+.rate-tier-number { display:block; font-family:var(--f-cn); font-weight:500; font-size:11px; color:var(--text-dim); letter-spacing:.12em; margin-bottom:8px; }
+.rate-tier-name { font-family:var(--f-cn); font-size:22px; font-weight:700; letter-spacing:.055em; }
+.rate-table thead th:last-child .rate-tier-name { color:var(--lime); }
+.rate-category-row th { padding:28px 18px 14px; color:var(--lime); font-family:var(--f-cn); font-size:22px; font-weight:700; letter-spacing:.06em; border-bottom:1px solid var(--line-2); overflow-wrap:anywhere; }
+.rate-category-number { display:inline-block; min-width:32px; font-size:12px; vertical-align:middle; color:var(--text-mute); margin-right:12px; }
+.rate-service-row > * { padding:19px 18px; border-bottom:1px dashed var(--line); vertical-align:middle; }
+.rate-service-row:hover { background:rgba(255,255,255,.025); }
+.rate-service-name { font-family:var(--f-ext); font-size:13px; font-weight:400; line-height:1.6; overflow-wrap:anywhere; }
+.rate-amount { text-align:right; font-family:var(--f-ext); font-size:16px; font-weight:500; font-variant-numeric:tabular-nums; }
+.rate-amount-plus { color:var(--lime); background:rgba(166,206,57,.025); }
+.rate-missing { color:var(--text-mute); }
+.rate-legend { font-family:var(--f-cn); font-size:14px; color:var(--text-dim); margin:20px 18px 0; }
+@media(max-width:760px) {
+  .rate-heading { gap:12px; padding-bottom:16px; }
+  .rate-heading h1 { font-size:21px; }
+  .rate-edition { font-size:12px; }
+  .rate-tabs { display:flex; width:100%; gap:2px; padding:5px; border-radius:12px; }
+  .rate-tab { flex:1 1 auto; min-width:0; padding:10px 5px; font-family:var(--f-cn); font-size:20px; letter-spacing:.02em; }
+  .rate-tabs-indicator { top:5px; bottom:5px; border-radius:8px; }
+  .rate-table col.rate-service-col { width:48%; }
+  .rate-table col { width:26%; }
+  .rate-table thead th { padding:12px 7px 17px; }
+  .rate-tier-number { font-size:9px; letter-spacing:.035em; margin-bottom:5px; }
+  .rate-tier-name { font-size:18px; letter-spacing:0; }
+  .rate-service-row > * { padding:15px 7px; }
+  .rate-service-name { font-family:var(--f-cn); font-size:17px; line-height:1.35; letter-spacing:.015em; }
+  .rate-amount { font-family:var(--f-cn); font-size:20px; font-weight:700; }
+  .rate-category-row th { padding:24px 7px 12px; font-size:21px; }
+  .rate-category-number { margin-right:6px; min-width:22px; }
+  .rate-legend { margin-left:7px; }
+}
+@media(max-width:360px) {
+  .rate-tab { font-size:17px; padding-inline:4px; }
+  .rate-heading h1 { font-size:18px; }
+  .rate-eyebrow { font-size:9px; }
+  .rate-tier-name { font-size:16px; }
+  .rate-tier-number { font-size:8px; }
+  .rate-service-name { font-size:16px; }
+  .rate-amount { font-size:18px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .rate-tabs-indicator,.rate-tab { transition:none; }
+}
+
 </style>
 </head>
 <body>
@@ -2311,171 +2376,1070 @@ window.BRITVA = {
 // ============================================================
 // TAB: ПРАЙС
 // ============================================================
+// Manual 2026 snapshot. Refresh from the three source sheets when updating the site.
+// BEGIN PRICE_2026_DATA
+var PRICE_2026 = {
+  "year": 2026,
+  "updated": "2026-10-09",
+  "source": "https://docs.google.com/spreadsheets/d/1jzxCqz0yVi16YWqQOuIzB8jAs0_GiTy3Lp66f6M16iI/edit",
+  "sharedCategories": [
+    "УХОД ЗА ЛИЦОМ",
+    "ДОПОЛНИТЕЛЬНЫЕ УСЛУГИ",
+    "ОКРАШИВАНИЕ ВОЛОС",
+    "ЗАВИВКА"
+  ],
+  "groups": [
+    {
+      "key": "barber",
+      "label": "Барбер",
+      "tiers": [
+        "БАРБЕР",
+        "БАРБЕР+"
+      ],
+      "categories": [
+        {
+          "title": "СТРИЖКИ",
+          "items": [
+            {
+              "name": "МУЖСКАЯ СТРИЖКА",
+              "prices": [
+                1690,
+                1890
+              ]
+            },
+            {
+              "name": "ДЕТСКАЯ СТРИЖКА (ОТ 4 ДО 10 ЛЕТ)",
+              "prices": [
+                1490,
+                1690
+              ]
+            },
+            {
+              "name": "СТРИЖКА МАШИНКОЙ (1-2 НАСАДКИ)",
+              "prices": [
+                1090,
+                1290
+              ]
+            },
+            {
+              "name": "БРИТЬЁ ГОЛОВЫ (ОПАСНОЙ БРИТВОЙ)",
+              "prices": [
+                1790,
+                1890
+              ]
+            },
+            {
+              "name": "СТРИЖКА НОЖНИЦАМИ",
+              "prices": [
+                2290,
+                2290
+              ]
+            },
+            {
+              "name": "СТРИЖКА HAPPY HOURS",
+              "prices": [
+                1390,
+                1590
+              ]
+            },
+            {
+              "name": "СТРИЖКА ДЛЯ СТУДЕНТОВ",
+              "prices": [
+                1490,
+                1690
+              ]
+            },
+            {
+              "name": "ПАПА + СЫН (ДО 10 ЛЕТ)",
+              "prices": [
+                3080,
+                3480
+              ]
+            },
+            {
+              "name": "ПЕРВАЯ СТРИЖКА НОЖНИЦАМИ",
+              "prices": [
+                1890,
+                1890
+              ]
+            },
+            {
+              "name": "ПЕРВАЯ СТРИЖКА",
+              "prices": [
+                1390,
+                1590
+              ]
+            }
+          ]
+        },
+        {
+          "title": "БРИТЬЁ",
+          "items": [
+            {
+              "name": "БРИТЬЁ НАЧИСТО ШЕЙВЕРОМ",
+              "prices": [
+                1390,
+                1490
+              ]
+            },
+            {
+              "name": "КОРОЛЕВСКОЕ БРИТЬЁ (ОПАСНОЙ БРИТВОЙ)",
+              "prices": [
+                1790,
+                1890
+              ]
+            },
+            {
+              "name": "МОДЕЛИРОВАНИЕ БОРОДЫ (ОПАСНОЙ БРИТВОЙ С РАСПАРИВАНИЕМ)",
+              "prices": [
+                1590,
+                1690
+              ]
+            },
+            {
+              "name": "МОДЕЛИРОВАНИЕ БОРОДЫ (ШЕЙВЕРОМ)",
+              "prices": [
+                1390,
+                1490
+              ]
+            },
+            {
+              "name": "СТРИЖКА БОРОДЫ И УСОВ (ДО 6 ММ)",
+              "prices": [
+                1090,
+                1290
+              ]
+            },
+            {
+              "name": "НЕОКЛАССИЧЕСКОЕ БРИТЬЕ ОТ LONDON GROOMING",
+              "prices": [
+                2490,
+                null
+              ]
+            },
+            {
+              "name": "НЕОКЛАССИЧЕСКОЕ МОДЕЛИРОВАНИЕ БОРОДЫ ОТ LONDON GROOMING",
+              "prices": [
+                2290,
+                null
+              ]
+            },
+            {
+              "name": "ПРЕМИАЛЬНОЕ БРИТЬЁ GRAHAM HILL",
+              "prices": [
+                2290,
+                null
+              ]
+            },
+            {
+              "name": "ПРЕМИАЛЬНОЕ МОДЕЛИРОВАНИЕ БОРОДЫ GRAHAM HILL",
+              "prices": [
+                1990,
+                null
+              ]
+            },
+            {
+              "name": "ТРАДИЦИОННОЕ ИТАЛЬЯНСКОЕ БРИТЬЕ DEPOT",
+              "prices": [
+                2290,
+                null
+              ]
+            }
+          ]
+        },
+        {
+          "title": "КОМПЛЕКСНЫЕ УСЛУГИ",
+          "items": [
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + BLACK MASK/VOLCANO + ВОСК",
+              "prices": [
+                3990,
+                4190
+              ]
+            },
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ",
+              "prices": [
+                3280,
+                3580
+              ]
+            },
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ + BLACK MASK/VOLCANO + ВОСК",
+              "prices": [
+                5580,
+                5880
+              ]
+            },
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ + ВОСК",
+              "prices": [
+                3980,
+                4280
+              ]
+            },
+            {
+              "name": "СТРИЖКА МАШИНКОЙ (1-2 НАСАДКИ) + СТРИЖКА БОРОДЫ",
+              "prices": [
+                2180,
+                2580
+              ]
+            }
+          ]
+        },
+        {
+          "title": "УХОД ЗА ЛИЦОМ",
+          "items": [
+            {
+              "name": "BLACK MASK",
+              "prices": [
+                1800,
+                1800
+              ]
+            },
+            {
+              "name": "DEPOT",
+              "prices": [
+                4000,
+                4000
+              ]
+            },
+            {
+              "name": "VOLCANO",
+              "prices": [
+                1800,
+                1800
+              ]
+            },
+            {
+              "name": "КОМПЛЕКС ПО УХОДУ ЗА КОЖЕЙ ОТ LONDON GROOMING",
+              "prices": [
+                2900,
+                2900
+              ]
+            },
+            {
+              "name": "ВОССТАНАВЛИВАЮЩАЯ ТЕРАПИЯ ДЛЯ ЛИЦА RHEA",
+              "prices": [
+                6300,
+                6300
+              ]
+            },
+            {
+              "name": "ВОССТАНАВЛИВАЮЩАЯ ТЕРАПИЯ ДЛЯ ЛИЦА RHEA + ПАТЧИ",
+              "prices": [
+                8000,
+                8000
+              ]
+            },
+            {
+              "name": "ИНТЕНСИВНЫЙ УХОД ЗА КОЖЕЙ ЛИЦА VOLCANO",
+              "prices": [
+                2000,
+                2000
+              ]
+            },
+            {
+              "name": "КОМПЛЕКС ПО УХОДУ ЗА КОЖЕЙ ЛИЦА И БОРОДЫ INGLORIUS",
+              "prices": [
+                2000,
+                2000
+              ]
+            }
+          ]
+        },
+        {
+          "title": "ДОПОЛНИТЕЛЬНЫЕ УСЛУГИ",
+          "items": [
+            {
+              "name": "ТОНИРОВАНИЕ ГОЛОВЫ",
+              "prices": [
+                "2 000–4 000 ₽",
+                "2 000–4 000 ₽"
+              ]
+            },
+            {
+              "name": "ТОНИРОВАНИЕ БОРОДЫ",
+              "prices": [
+                "1 600–3 000 ₽",
+                "1 600–3 000 ₽"
+              ]
+            },
+            {
+              "name": "ДЕТОКС КОЖИ ГОЛОВЫ GRAHAM HILL",
+              "prices": [
+                700,
+                700
+              ]
+            },
+            {
+              "name": "ВОСК // ДВЕ ЗОНЫ",
+              "prices": [
+                700,
+                700
+              ]
+            },
+            {
+              "name": "ВОСК // КОМПЛЕКС",
+              "prices": [
+                900,
+                900
+              ]
+            },
+            {
+              "name": "HAIR TATTOO",
+              "prices": [
+                600,
+                600
+              ]
+            },
+            {
+              "name": "ОКАНТОВКА ГОЛОВЫ + УКЛАДКА",
+              "prices": [
+                1000,
+                1000
+              ]
+            },
+            {
+              "name": "УКЛАДКА БЕЗ СТРИЖКИ",
+              "prices": [
+                800,
+                800
+              ]
+            },
+            {
+              "name": "ПАТЧИ",
+              "prices": [
+                400,
+                400
+              ]
+            },
+            {
+              "name": "КОМПЛЕКСНЫЙ УХОД ЗА КОЖЕЙ ГОЛОВЫ И ВОЛОСАМИ ОТ DEPOT",
+              "prices": [
+                2700,
+                2700
+              ]
+            },
+            {
+              "name": "УХОД ЗА КОЖЕЙ ГОЛОВЫ И ВОЛОСАМИ VOLCANO",
+              "prices": [
+                700,
+                700
+              ]
+            },
+            {
+              "name": "ОЗДОРАВЛИВАЮЩАЯ ДЕТОКС ТЕРАПИЯ OPIFICIO EMILIANO",
+              "prices": [
+                5100,
+                5100
+              ]
+            },
+            {
+              "name": "ТЕРАПИЯ ДЛЯ СУХОЙ КОЖИ ГОЛОВЫ И БОРЬБЫ С ПЕРХОТЬЮ OPIFICIO EMILIANO",
+              "prices": [
+                5100,
+                5100
+              ]
+            },
+            {
+              "name": "ТЕРАПИЯ ДЛЯ ЖИРНОЙ КОЖИ ГОЛОВЫ И БОРЬБЫ С ПЕРХОТЬЮ OPIFICIO EMILIANO",
+              "prices": [
+                5100,
+                5100
+              ]
+            },
+            {
+              "name": "СИСТЕМА УХОДА ЗА КОЖЕЙ ГОЛОВЫ И ВОЛОСАМИ SOLOMON’S",
+              "prices": [
+                1800,
+                1800
+              ]
+            },
+            {
+              "name": "ДЕТОКС КОЖИ ГОЛОВЫ ОТ REUZEL",
+              "prices": [
+                700,
+                700
+              ]
+            },
+            {
+              "name": "КОМПЛЕКСНЫЙ УХОД ЗА КОЖЕЙ ГОЛОВЫ И ВОЛОСАМИ ОТ THEO",
+              "prices": [
+                2300,
+                2300
+              ]
+            },
+            {
+              "name": "КОМПЛЕКСНЫЙ УХОД ЗА КОЖЕЙ ГОЛОВЫ И ВОЛОСАМИ ОТ SYSTEM 4",
+              "prices": [
+                1700,
+                1700
+              ]
+            }
+          ]
+        },
+        {
+          "title": "ОКРАШИВАНИЕ ВОЛОС",
+          "items": [
+            {
+              "name": "МЕЛИРОВАНИЕ ОДНОЙ ПРЯДИ",
+              "prices": [
+                3500,
+                3500
+              ]
+            },
+            {
+              "name": "МЕЛИРОВАНИЕ ПРИКОРНЕВОЕ",
+              "prices": [
+                8000,
+                8000
+              ]
+            },
+            {
+              "name": "ОКРАШИВАНИЕ КОРОТКОЙ ДЛИНЫ (ДО 3 СМ)",
+              "prices": [
+                9000,
+                9000
+              ]
+            },
+            {
+              "name": "ОКРАШИВАНИЕ СРЕДНЕЙ ДЛИНЫ (ДО 7 СМ)",
+              "prices": [
+                12000,
+                12000
+              ]
+            },
+            {
+              "name": "ОКРАШИВАНИЕ СРЕДНЕЙ ДЛИНЫ (ОТ 7 СМ)",
+              "prices": [
+                14500,
+                14500
+              ]
+            },
+            {
+              "name": "ТОНИРОВАНИЕ УЖЕ ОБЕСЦВЕЧЕННОЙ БАЗЫ",
+              "prices": [
+                6500,
+                6500
+              ]
+            },
+            {
+              "name": "ОСВЕТЛЕНИЕ КОРНЕЙ",
+              "prices": [
+                "5 000–9 000 ₽",
+                "5 000–9 000 ₽"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "ЗАВИВКА",
+          "items": [
+            {
+              "name": "ХИМИЧЕСКАЯ ЗАВИВКА ДО 15 СМ",
+              "prices": [
+                9000,
+                9000
+              ]
+            },
+            {
+              "name": "ХИМИЧЕСКАЯ ЗАВИВКА ДО 25 СМ",
+              "prices": [
+                10000,
+                10000
+              ]
+            }
+          ]
+        },
+        {
+          "title": "ПОДАРОЧНЫЕ СЕРТИФИКАТЫ И АБОНЕМЕНТЫ",
+          "items": [
+            {
+              "name": "ГОДОВОЙ АБОНЕМЕНТ НА 10 УСЛУГ \"МУЖСКАЯ СТРИЖКА\"",
+              "prices": [
+                14900,
+                16900
+              ]
+            },
+            {
+              "name": "ГОДОВОЙ АБОНЕМЕНТ НА 10 УСЛУГ \"МОДЕЛИРОВАНИЕ БОРОДЫ\"",
+              "prices": [
+                13900,
+                14900
+              ]
+            },
+            {
+              "name": "ГОДОВОЙ АБОНЕМЕНТ НА 10 УСЛУГ \"МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ\"",
+              "prices": [
+                28800,
+                31800
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "top",
+      "label": "Топ-барбер",
+      "tiers": [
+        "ТОП-БАРБЕР",
+        "ТОП+"
+      ],
+      "categories": [
+        {
+          "title": "СТРИЖКИ",
+          "items": [
+            {
+              "name": "МУЖСКАЯ СТРИЖКА",
+              "prices": [
+                2290,
+                2500
+              ]
+            },
+            {
+              "name": "ДЕТСКАЯ СТРИЖКА (ОТ 4 ДО 10 ЛЕТ)",
+              "prices": [
+                2290,
+                2500
+              ]
+            },
+            {
+              "name": "СТРИЖКА МАШИНКОЙ (1-2 НАСАДКИ)",
+              "prices": [
+                1390,
+                1600
+              ]
+            },
+            {
+              "name": "БРИТЬЕ ГОЛОВЫ (ОПАСНОЙ БРИТВОЙ)",
+              "prices": [
+                2290,
+                2500
+              ]
+            },
+            {
+              "name": "СТРИЖКА НОЖНИЦАМИ",
+              "prices": [
+                2290,
+                2500
+              ]
+            }
+          ]
+        },
+        {
+          "title": "АКЦИИ",
+          "items": [
+            {
+              "name": "СТРИЖКА HAPPY HOURS",
+              "prices": [
+                1890,
+                2000
+              ]
+            },
+            {
+              "name": "СТРИЖКА ДЛЯ СТУДЕНТОВ",
+              "prices": [
+                1990,
+                2100
+              ]
+            },
+            {
+              "name": "ПАПА + СЫН (ДО 10 ЛЕТ)",
+              "prices": [
+                4480,
+                4800
+              ]
+            },
+            {
+              "name": "ПЕРВАЯ СТРИЖКА",
+              "prices": [
+                1890,
+                2000
+              ]
+            }
+          ]
+        },
+        {
+          "title": "БРИТЬЁ",
+          "items": [
+            {
+              "name": "БРИТЬЁ НАЧИСТО ШЕЙВЕРОМ",
+              "prices": [
+                1690,
+                1800
+              ]
+            },
+            {
+              "name": "КОРОЛЕВСКОЕ БРИТЬЕ (ОПАСНОЙ БРИТВОЙ)",
+              "prices": [
+                2290,
+                2500
+              ]
+            },
+            {
+              "name": "МОДЕЛИРОВАНИЕ БОРОДЫ (ОПАСНОЙ БРИТВОЙ С РАСПАРИВАНИЕМ)",
+              "prices": [
+                1890,
+                2300
+              ]
+            },
+            {
+              "name": "МОДЕЛИРОВАНИЕ БОРОДЫ (ШЕЙВЕРОМ)",
+              "prices": [
+                1590,
+                1800
+              ]
+            },
+            {
+              "name": "ПРЕМИАЛЬНОЕ БРИТЬЁ GRAHAM HILL",
+              "prices": [
+                2590,
+                2590
+              ]
+            },
+            {
+              "name": "ПРЕМИАЛЬНОЕ МОДЕЛИРОВАНИЕ БОРОДЫ GRAHAM HILL",
+              "prices": [
+                2290,
+                2290
+              ]
+            },
+            {
+              "name": "НЕОКЛАССИЧЕСКОЕ БРИТЬЕ ОТ LONDON GROOMING",
+              "prices": [
+                2690,
+                2690
+              ]
+            },
+            {
+              "name": "НЕОКЛАССИЧЕСКОЕ МОДЕЛИРОВАНИЕ БОРОДЫ ОТ LONDON GROOMING",
+              "prices": [
+                2490,
+                2490
+              ]
+            },
+            {
+              "name": "СТРИЖКА БОРОДЫ И УСОВ (ДО 6 ММ)",
+              "prices": [
+                1390,
+                1600
+              ]
+            },
+            {
+              "name": "ТРАДИЦИОННОЕ ИТАЛЬЯНСКОЕ БРИТЬЕ DEPOT",
+              "prices": [
+                2590,
+                2590
+              ]
+            }
+          ]
+        },
+        {
+          "title": "КОМПЛЕКСНЫЕ УСЛУГИ",
+          "items": [
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + BLACK MASK/VOLCANO + ВОСК",
+              "prices": [
+                4590,
+                4800
+              ]
+            },
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ + BLACK MASK/VOLCANO + ВОСК",
+              "prices": [
+                6480,
+                7100
+              ]
+            },
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ + ВОСК",
+              "prices": [
+                4880,
+                5500
+              ]
+            },
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ",
+              "prices": [
+                4180,
+                4800
+              ]
+            },
+            {
+              "name": "СТРИЖКА МАШИНКОЙ (1-2 НАСАДКИ) + СТРИЖКА БОРОДЫ",
+              "prices": [
+                2780,
+                3200
+              ]
+            }
+          ]
+        },
+        {
+          "title": "ПОДАРОЧНЫЕ СЕРТИФИКАТЫ И АБОНЕМЕНТЫ",
+          "items": [
+            {
+              "name": "ГОДОВОЙ АБОНЕМЕНТ НА 10 УСЛУГ \"МУЖСКАЯ СТРИЖКА\"",
+              "prices": [
+                19900,
+                21900
+              ]
+            },
+            {
+              "name": "ГОДОВОЙ АБОНЕМЕНТ НА 10 УСЛУГ \"МОДЕЛИРОВАНИЕ БОРОДЫ\"",
+              "prices": [
+                15900,
+                19900
+              ]
+            },
+            {
+              "name": "ГОДОВОЙ АБОНЕМЕНТ НА 10 УСЛУГ \"МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ\"",
+              "prices": [
+                35800,
+                41800
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "brand",
+      "label": "Бренд-барбер",
+      "tiers": [
+        "БРЕНД-БАРБЕР",
+        "БРЕНД-БАРБЕР+"
+      ],
+      "categories": [
+        {
+          "title": "СТРИЖКИ",
+          "items": [
+            {
+              "name": "МУЖСКАЯ СТРИЖКА",
+              "prices": [
+                2900,
+                3100
+              ]
+            },
+            {
+              "name": "ДЕТСКАЯ СТРИЖКА (ОТ 4 ДО 10 ЛЕТ)",
+              "prices": [
+                2900,
+                3100
+              ]
+            },
+            {
+              "name": "СТРИЖКА НОЖНИЦАМИ",
+              "prices": [
+                2900,
+                3100
+              ]
+            },
+            {
+              "name": "БРИТЬЁ ГОЛОВЫ (ОПАСНОЙ БРИТВОЙ)",
+              "prices": [
+                2900,
+                3100
+              ]
+            },
+            {
+              "name": "СТРИЖКА МАШИНКОЙ (1-2 НАСАДКИ)",
+              "prices": [
+                1800,
+                2000
+              ]
+            }
+          ]
+        },
+        {
+          "title": "АКЦИИ",
+          "items": [
+            {
+              "name": "СТРИЖКА HAPPY HOURS",
+              "prices": [
+                2400,
+                2500
+              ]
+            },
+            {
+              "name": "СТРИЖКА ДЛЯ СТУДЕНТОВ",
+              "prices": [
+                2500,
+                2600
+              ]
+            },
+            {
+              "name": "ПАПА + СЫН (ДО 10 ЛЕТ)",
+              "prices": [
+                5600,
+                6000
+              ]
+            }
+          ]
+        },
+        {
+          "title": "БРИТЬЁ",
+          "items": [
+            {
+              "name": "БРИТЬЁ НАЧИСТО ШЕЙВЕРОМ",
+              "prices": [
+                2000,
+                2100
+              ]
+            },
+            {
+              "name": "КОРОЛЕВСКОЕ БРИТЬЁ (ОПАСНОЙ БРИТВОЙ)",
+              "prices": [
+                2900,
+                3100
+              ]
+            },
+            {
+              "name": "МОДЕЛИРОВАНИЕ БОРОДЫ (ОПАСНОЙ БРИТВОЙ С РАСПАРИВАНИЕМ)",
+              "prices": [
+                2900,
+                3100
+              ]
+            },
+            {
+              "name": "МОДЕЛИРОВАНИЕ БОРОДЫ (ШЕЙВЕРОМ)",
+              "prices": [
+                2500,
+                2700
+              ]
+            },
+            {
+              "name": "СТРИЖКА БОРОДЫ И УСОВ (ДО 6 ММ)",
+              "prices": [
+                1800,
+                2000
+              ]
+            }
+          ]
+        },
+        {
+          "title": "КОМПЛЕКСНЫЕ УСЛУГИ",
+          "items": [
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + BLACK MASK/VOLCANO + ВОСК",
+              "prices": [
+                5200,
+                5400
+              ]
+            },
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ + BLACK MASK/VOLCANO + ВОСК",
+              "prices": [
+                8100,
+                8500
+              ]
+            },
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ + ВОСК",
+              "prices": [
+                6500,
+                6900
+              ]
+            },
+            {
+              "name": "МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ",
+              "prices": [
+                5800,
+                6200
+              ]
+            },
+            {
+              "name": "СТРИЖКА МАШИНКОЙ (1-2 НАСАДКИ) + СТРИЖКА БОРОДЫ",
+              "prices": [
+                3600,
+                4000
+              ]
+            }
+          ]
+        },
+        {
+          "title": "ПОДАРОЧНЫЕ СЕРТИФИКАТЫ И АБОНЕМЕНТЫ",
+          "items": [
+            {
+              "name": "ГОДОВОЙ АБОНЕМЕНТ НА 10 УСЛУГ \"МУЖСКАЯ СТРИЖКА\"",
+              "prices": [
+                24900,
+                26900
+              ]
+            },
+            {
+              "name": "ГОДОВОЙ АБОНЕМЕНТ НА 10 УСЛУГ \"МОДЕЛИРОВАНИЕ БОРОДЫ\"",
+              "prices": [
+                24900,
+                26900
+              ]
+            },
+            {
+              "name": "ГОДОВОЙ АБОНЕМЕНТ НА 10 УСЛУГ \"МУЖСКАЯ СТРИЖКА + МОДЕЛИРОВАНИЕ БОРОДЫ\"",
+              "prices": [
+                49800,
+                53800
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+};
+// END PRICE_2026_DATA
 (function () {
-  var _window$BRITVA = window.BRITVA,
-    PRICE_CATEGORIES = _window$BRITVA.PRICE_CATEGORIES,
-    TIERS = _window$BRITVA.TIERS;
-  function fmtPrice(p) {
-    if (p === null || p === undefined) return '—';
-    if (typeof p === 'string') return p + ' ₽';
-    return p.toLocaleString('ru-RU').replace(/,/g, "\xA0") + ' ₽';
+  var h = React.createElement;
+  function hasPrice(value) {
+    return value !== null && value !== undefined && value !== '' && !/^[—–-]+$/.test(String(value));
   }
-  function PriceHeader() {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "price-head"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "price-head-rail"
-    }), /*#__PURE__*/React.createElement("div", {
-      className: "price-head-name"
-    }, "\u0423\u0421\u041B\u0423\u0413\u0410"), TIERS.map(function (t, i) {
-      return /*#__PURE__*/React.createElement("div", {
-        key: t,
-        className: "price-head-tier tier-".concat(i)
-      }, /*#__PURE__*/React.createElement("span", {
-        className: "tier-num"
-      }, "0", i + 1), /*#__PURE__*/React.createElement("span", {
-        className: "tier-name"
-      }, t));
-    }));
+  function getCategories(group) {
+    var categories = group.categories.map(function (category) {
+      return { title: category.title, items: category.items.slice() };
+    });
+    // Shared services inherit the explicit pair of prices from the Barber sheet.
+    // Any price entered in a destination sheet takes precedence over this fallback.
+    PRICE_2026.groups[0].categories.forEach(function (common) {
+      if (PRICE_2026.sharedCategories.indexOf(common.title) === -1) return;
+      var existing = categories.find(function (category) { return category.title === common.title; });
+      if (existing) {
+        common.items.forEach(function (item) {
+          if (!existing.items.some(function (local) { return local.name === item.name; })) existing.items.push(item);
+        });
+      } else {
+        var subscriptions = categories.findIndex(function (category) { return category.title === 'ПОДАРОЧНЫЕ СЕРТИФИКАТЫ И АБОНЕМЕНТЫ'; });
+        categories.splice(subscriptions < 0 ? categories.length : subscriptions, 0, {
+          title: common.title, items: common.items.slice()
+        });
+      }
+    });
+    return categories.map(function (category) {
+      return { title: category.title, items: category.items.filter(function (item) { return item.prices.some(hasPrice); }) };
+    }).filter(function (category) { return category.items.length > 0; });
   }
-  var TIER_LABELS = ['BARBER', 'TOP', 'BRAND', 'BB+'];
-  function PriceRow(_ref) {
-    var item = _ref.item,
-      cat = _ref.cat;
-    var isBBplusOnly = cat.bbplusOnly || item.bbplusOnly;
-    var isFlat = cat.flat;
-    var durs = item.durations || [null, null, null, null];
-    if (isFlat) {
-      return /*#__PURE__*/React.createElement("div", {
-        className: "price-row price-row-5col"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "price-name"
-      }, /*#__PURE__*/React.createElement("span", {
-        className: "pname"
-      }, item.name), item.note && /*#__PURE__*/React.createElement("span", {
-        className: "pnote"
-      }, item.note)), /*#__PURE__*/React.createElement("div", {
-        className: "price-cells"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "price-flat-unified",
-        "data-tier-label": "\u0412\u0421\u0415 \u0422\u0418\u0420\u042B"
-      }, /*#__PURE__*/React.createElement("span", {
-        className: "price-val"
-      }, fmtPrice(item.prices[0])), /*#__PURE__*/React.createElement("span", {
-        className: "price-flat-tag"
-      }, "\u0434\u043B\u044F \u0432\u0441\u0435\u0445 \u043C\u0430\u0441\u0442\u0435\u0440\u043E\u0432"), durs[0] && /*#__PURE__*/React.createElement("span", {
-        className: "price-dur"
-      }, durs[0]))));
+  function PriceValue(props) {
+    var value = props.value;
+    if (!hasPrice(value)) return h('span', { className: 'rate-missing', 'aria-label': 'Цена не указана' }, '—');
+    if (typeof value === 'number') return value.toLocaleString('ru-RU') + '\u00a0₽';
+    var formatted = String(value).replace(/\s*₽\s*$/, '');
+    var parts = formatted.split(/[–—-]/);
+    if (parts.length === 2) return h(React.Fragment, null, parts[0].trim(), '–', h('wbr'), parts[1].trim(), '\u00a0₽');
+    return formatted + '\u00a0₽';
+  }
+  function SlidingTabs(props) {
+    var container = React.useRef(null);
+    var buttons = React.useRef([]);
+    var state = React.useState(null), indicator = state[0], setIndicator = state[1];
+    React.useLayoutEffect(function () {
+      var disposed = false;
+      function measure() {
+        var button = buttons.current[props.active];
+        if (disposed || !button) return;
+        var next = { left: button.offsetLeft, width: button.offsetWidth };
+        setIndicator(function (previous) {
+          return previous && previous.left === next.left && previous.width === next.width ? previous : next;
+        });
+      }
+      measure();
+      var observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+      if (observer) {
+        observer.observe(container.current);
+        buttons.current.forEach(function (button) { if (button) observer.observe(button); });
+      }
+      window.addEventListener('resize', measure);
+      if (document.fonts) {
+        document.fonts.ready.then(measure);
+        document.fonts.addEventListener('loadingdone', measure);
+      }
+      return function () {
+        disposed = true;
+        if (observer) observer.disconnect();
+        window.removeEventListener('resize', measure);
+        if (document.fonts) document.fonts.removeEventListener('loadingdone', measure);
+      };
+    }, [props.active]);
+    function keyDown(event) {
+      var next;
+      if (event.key === 'ArrowRight') next = (props.active + 1) % props.items.length;
+      else if (event.key === 'ArrowLeft') next = (props.active + props.items.length - 1) % props.items.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = props.items.length - 1;
+      else return;
+      event.preventDefault();
+      props.onChange(next);
+      buttons.current[next].focus({ preventScroll: true });
     }
-
-    // Check if all 4 prices are identical (numbers or strings)
-    var allSame = !isBBplusOnly && item.prices[0] != null && item.prices[0] === item.prices[1] && item.prices[1] === item.prices[2] && item.prices[2] === item.prices[3];
-    if (allSame) {
-      return /*#__PURE__*/React.createElement("div", {
-        className: "price-row price-row-5col"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "price-name"
-      }, /*#__PURE__*/React.createElement("span", {
-        className: "pname"
-      }, item.name), item.note && /*#__PURE__*/React.createElement("span", {
-        className: "pnote"
-      }, item.note)), /*#__PURE__*/React.createElement("div", {
-        className: "price-cells"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "price-flat-unified",
-        "data-tier-label": "\u0412\u0421\u0415 \u0422\u0418\u0420\u042B"
-      }, /*#__PURE__*/React.createElement("span", {
-        className: "price-val"
-      }, fmtPrice(item.prices[0])), /*#__PURE__*/React.createElement("span", {
-        className: "price-flat-tag"
-      }, "\u0434\u043B\u044F \u0432\u0441\u0435\u0445 \u043C\u0430\u0441\u0442\u0435\u0440\u043E\u0432"), durs[0] && /*#__PURE__*/React.createElement("span", {
-        className: "price-dur"
-      }, durs[0]))));
-    }
-    return /*#__PURE__*/React.createElement("div", {
-      className: "price-row price-row-5col"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "price-name"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "pname"
-    }, item.name), item.note && /*#__PURE__*/React.createElement("span", {
-      className: "pnote"
-    }, item.note)), /*#__PURE__*/React.createElement("div", {
-      className: "price-cells"
-    }, [0, 1, 2].map(function (i) {
-      return /*#__PURE__*/React.createElement("div", {
-        key: i,
-        className: "price-val-cell",
-        "data-tier-label": TIER_LABELS[i]
-      }, isBBplusOnly ? /*#__PURE__*/React.createElement("span", {
-        className: "price-dash"
-      }, "\u2014") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
-        className: "price-val"
-      }, fmtPrice(item.prices[i])), durs[i] && /*#__PURE__*/React.createElement("span", {
-        className: "price-dur"
-      }, durs[i])));
-    }), /*#__PURE__*/React.createElement("div", {
-      className: "price-val-cell tier-3-cell",
-      "data-tier-label": "BB+"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "price-val"
-    }, fmtPrice(item.prices[3])), durs[3] && /*#__PURE__*/React.createElement("span", {
-      className: "price-dur"
-    }, durs[3]))));
+    return h('div', { className: 'rate-tabs-scroll' },
+      h('div', { className: 'rate-tabs', ref: container, role: 'tablist', 'aria-label': 'Градация барбера', onKeyDown: keyDown },
+        indicator && h('span', {
+          className: 'rate-tabs-indicator', 'aria-hidden': true,
+          style: { width: indicator.width, transform: 'translateX(' + indicator.left + 'px)' }
+        }),
+        props.items.map(function (item, index) {
+          return h('button', {
+            key: item.key, type: 'button', role: 'tab', id: 'rate-tab-' + item.key,
+            'aria-controls': 'rate-panel-' + item.key, 'aria-selected': props.active === index,
+            tabIndex: props.active === index ? 0 : -1,
+            className: 'rate-tab' + (props.active === index ? ' is-selected' : ''),
+            ref: function (button) { buttons.current[index] = button; },
+            onClick: function () { props.onChange(index); }
+          }, item.label);
+        })
+      )
+    );
   }
-  function PriceCategory(_ref2) {
-    var cat = _ref2.cat;
-    return /*#__PURE__*/React.createElement("section", {
-      className: "price-cat",
-      "data-cat": cat.key
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "price-cat-grid"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "price-cat-rail"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "price-cat-label"
-    }, cat.title)), /*#__PURE__*/React.createElement("div", {
-      className: "price-cat-body"
-    }, cat.items.map(function (it, i) {
-      return /*#__PURE__*/React.createElement(PriceRow, {
-        key: i,
-        item: it,
-        cat: cat
-      });
-    }))));
+  function RateTable(props) {
+    var group = props.group;
+    var categories = getCategories(group);
+    return h('table', { className: 'rate-table', 'aria-label': 'Прайс: ' + group.label },
+      h('colgroup', null, h('col', { className: 'rate-service-col' }), h('col'), h('col')),
+      h('thead', null, h('tr', null,
+        h('th', { scope: 'col', className: 'rate-service-heading' }, 'Услуга'),
+        group.tiers.map(function (tier, index) {
+          return h('th', { key: tier, scope: 'col' },
+            h('span', { className: 'rate-tier-number' }, index === 0 ? '01 / ОСНОВНАЯ' : '02 / ПОДГРАДАЦИЯ'),
+            h('span', { className: 'rate-tier-name' }, tier));
+        })
+      )),
+      categories.map(function (category, index) {
+        var categoryId = 'rate-category-' + group.key + '-' + index;
+        return h('tbody', { key: category.title, 'aria-labelledby': categoryId },
+          h('tr', { className: 'rate-category-row' }, h('th', { colSpan: 3, id: categoryId, scope: 'rowgroup' },
+            h('span', { className: 'rate-category-number', 'aria-hidden': true }, String(index + 1).padStart(2, '0')),
+            category.title)),
+          category.items.map(function (item) {
+            return h('tr', { key: item.name, className: 'rate-service-row' },
+              h('th', { scope: 'row', className: 'rate-service-name' }, item.name),
+              item.prices.map(function (price, i) {
+                return h('td', { key: i, className: 'rate-amount' + (i === 1 ? ' rate-amount-plus' : '') }, h(PriceValue, { value: price }));
+              }));
+          })
+        );
+      })
+    );
   }
   function TabPrice() {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "tab-price"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "price-meta"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "price-meta-l"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "meta-label"
-    }, "\u041F\u0420\u0410\u0419\u0421-\u041B\u0418\u0421\u0422"), /*#__PURE__*/React.createElement("span", {
-      className: "meta-sep"
-    }), /*#__PURE__*/React.createElement("span", {
-      className: "meta-sub"
-    }, "\u0430\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u043E \u0441 01.05.2026")), /*#__PURE__*/React.createElement("div", {
-      className: "price-meta-r"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "meta-sub"
-    }, "\u0432\u0441\u0435 \u0446\u0435\u043D\u044B \u0432\xA0\u20BD"))), /*#__PURE__*/React.createElement(PriceHeader, null), /*#__PURE__*/React.createElement("div", {
-      className: "price-body"
-    }, PRICE_CATEGORIES.map(function (cat) {
-      return /*#__PURE__*/React.createElement(PriceCategory, {
-        key: cat.key,
-        cat: cat
-      });
-    })), /*#__PURE__*/React.createElement("div", {
-      className: "price-foot"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "foot-num"
-    }, "\u2014 BRITVA / PRICING / v.05.26 \u2014")));
+    var state = React.useState(0), active = state[0], setActive = state[1];
+    return h('div', { className: 'tab-price rate-page' },
+      h('div', { className: 'rate-heading' },
+        h('div', null, h('div', { className: 'rate-eyebrow' }, 'BRITVA / ADMIN BAZA'), h('h1', null, 'ПРАЙС-ЛИСТ')),
+        h('div', { className: 'rate-edition' }, h('span', null, 'ЦЕНЫ 2026'), h('span', null, 'Все цены в ₽'))),
+      h(SlidingTabs, { items: PRICE_2026.groups, active: active, onChange: setActive }),
+      PRICE_2026.groups.map(function (group, i) {
+        return h('section', {
+          key: group.key, role: 'tabpanel', id: 'rate-panel-' + group.key,
+          'aria-labelledby': 'rate-tab-' + group.key, hidden: active !== i, tabIndex: 0,
+          className: 'rate-panel'
+        }, active === i ? h(RateTable, { group: group }) : null);
+      }),
+      h('p', { className: 'rate-legend' }, '— цена для этой градации не указана.'),
+      h('div', { className: 'price-foot' }, h('span', { className: 'foot-num' }, '— BRITVA / PRICING / 2026 —'))
+    );
   }
   window.TabPrice = TabPrice;
 })();
+
 
 // ============================================================
 // TAB: КАЛЬКУЛЯТОР
