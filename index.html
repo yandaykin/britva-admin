@@ -790,6 +790,27 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; }
    TAB 3 — ТРЕНАЖЁР
    ============================================================ */
 .tab-trainer { }
+.tr-price-tiers {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px; margin: 24px 0; max-width: 880px;
+}
+.tr-price-tier {
+  display: flex; align-items: center; gap: 12px;
+  min-width: 0; padding: 20px 16px;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--panel); cursor: pointer;
+  font-family: var(--f-cn); font-size: 24px; font-weight: 700;
+  transition: border-color .15s, background .15s;
+}
+.tr-price-tier.is-selected {
+  border-color: var(--lime); background: rgba(166, 206, 57, .08); color: var(--lime);
+}
+.tr-price-tier:focus-within { outline: 2px solid var(--lime); outline-offset: 3px; }
+.tr-price-tier input { accent-color: var(--lime); width: 18px; height: 18px; flex: 0 0 auto; }
+@media (max-width: 640px) {
+  .tr-price-tiers { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .tr-price-tier { padding: 16px 10px; gap: 8px; font-size: 21px; }
+}
 .tr-head {
   display: flex; justify-content: space-between; align-items: flex-end;
   padding-bottom: 14px;
@@ -3438,6 +3459,7 @@ var PRICE_2026 = {
     );
   }
   window.TabPrice = TabPrice;
+  window.BRITVA_PRICE = { data: PRICE_2026, getCategories: getCategories };
 })();
 
 
@@ -3726,6 +3748,42 @@ var PRICE_2026 = {
     sub: 'впиши все цены — сдай'
   }];
   var TOTAL_Q = 15;
+  var PRICE_TIERS = [];
+  window.BRITVA_PRICE.data.groups.forEach(function (group) {
+    group.tiers.forEach(function (label, index) {
+      PRICE_TIERS.push({ key: group.key + ':' + index, label: label, group: group, index: index });
+    });
+  });
+  function getPriceEntries(tierKey) {
+    var tier = PRICE_TIERS.find(function (entry) { return entry.key === tierKey; });
+    if (!tier) return [];
+    var entries = [];
+    window.BRITVA_PRICE.getCategories(tier.group).forEach(function (category) {
+      category.items.forEach(function (item) {
+        var price = item.prices[tier.index];
+        if (price === null || price === undefined || price === '' || /^[—–-]+$/.test(String(price))) return;
+        entries.push({ name: item.name, category: category.title, tier: tier.label, price: price });
+      });
+    });
+    return entries;
+  }
+  function formatPriceAnswer(price) {
+    return typeof price === 'number' ? fmtRub2(price) + '\u00a0₽' : String(price).replace(/\s*₽\s*$/, '') + '\u00a0₽';
+  }
+  function makePriceQuestion(tierKey) {
+    var entries = getPriceEntries(tierKey);
+    var entry = entries[Math.floor(Math.random() * entries.length)];
+    var alternatives = Array.from(new Set(entries.map(function (item) { return item.price; })))
+      .filter(function (price) { return price !== entry.price; });
+    return {
+      mode: 'price',
+      prompt: { title: entry.name, tier: entry.tier },
+      options: shuffle([entry.price].concat(shuffle(alternatives).slice(0, 3))).map(function (price) {
+        return { label: formatPriceAnswer(price), value: price };
+      }),
+      correctValue: entry.price
+    };
+  }
   function shuffle(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -3748,42 +3806,6 @@ var PRICE_2026 = {
   });
   function makeQuestion(mode) {
     var svcs = QUIZ_SERVICES;
-    if (mode === 'price') {
-      var svc = svcs[Math.floor(Math.random() * svcs.length)];
-      var validIdxs = svc.prices.map(function (p, i) {
-        return p > 0 ? i : -1;
-      }).filter(function (i) {
-        return i >= 0;
-      });
-      var tierIdx = validIdxs[Math.floor(Math.random() * validIdxs.length)];
-      var correct = svc.prices[tierIdx];
-      var distractors = new Set();
-      var _tries = 0;
-      while (distractors.size < 3 && _tries < 200) {
-        _tries++;
-        var o = svcs[Math.floor(Math.random() * svcs.length)];
-        var p = o.prices[Math.floor(Math.random() * 4)];
-        if (p && p !== correct) distractors.add(p);
-      }
-      var options = shuffle([correct].concat(_toConsumableArray(distractors)));
-      return {
-        mode: mode,
-        svc: svc,
-        tierIdx: tierIdx,
-        correct: correct,
-        prompt: {
-          title: svc.label,
-          tier: TR_TIERS[tierIdx]
-        },
-        options: options.map(function (p) {
-          return {
-            label: "".concat(fmtRub2(p), "\xA0\u20BD"),
-            value: p
-          };
-        }),
-        correctValue: correct
-      };
-    }
     if (mode === 'service') {
       var _svc = svcs[Math.floor(Math.random() * svcs.length)];
       var _validIdxs = _svc.prices.map(function (p, i) {
@@ -4204,6 +4226,8 @@ var PRICE_2026 = {
     return null;
   }
   function TabTrainer() {
+    var priceTierState = React.useState(PRICE_TIERS[0].key);
+    var priceTier = priceTierState[0], setPriceTier = priceTierState[1];
     var _React$useState17 = React.useState(null),
       _React$useState18 = _slicedToArray(_React$useState17, 2),
       mode = _React$useState18[0],
@@ -4228,9 +4252,13 @@ var PRICE_2026 = {
       _React$useState28 = _slicedToArray(_React$useState27, 2),
       done = _React$useState28[0],
       setDone = _React$useState28[1];
-    function start(m) {
+    function start(m, tierKey) {
+      if (m === 'price' && !tierKey) {
+        setMode('price-pick');
+        return;
+      }
       var qs = [];
-      for (var i = 0; i < TOTAL_Q; i++) qs.push(makeQuestion(m));
+      for (var i = 0; i < TOTAL_Q; i++) qs.push(m === 'price' ? makePriceQuestion(tierKey) : makeQuestion(m));
       setMode(m);
       setQuestions(qs);
       setQIdx(0);
@@ -4258,6 +4286,26 @@ var PRICE_2026 = {
     }
 
     // ── EXAM MODE ─────────────────────────────────────────────
+    if (mode === 'price-pick') {
+      return React.createElement('div', { className: 'tab-trainer' },
+        React.createElement('div', { className: 'tr-head tr-head-play' },
+          React.createElement('div', null,
+            React.createElement('div', { className: 'kicker' }, '03 / УГАДАЙ ЦЕНУ'),
+            React.createElement('h2', { className: 'tr-title' }, 'ВЫБЕРИ ГРАДАЦИЮ'),
+            React.createElement('div', { className: 'meta-sub' }, 'Прайс 2026 · 15 вопросов · без таймера')),
+          React.createElement('button', { className: 'btn-ghost btn-sm', onClick: exitToMenu }, '← назад')),
+        React.createElement('div', { className: 'tr-price-tiers', role: 'radiogroup', 'aria-label': 'Градация для тренировки' },
+          PRICE_TIERS.map(function (tier) {
+            return React.createElement('label', { key: tier.key, className: 'tr-price-tier' + (priceTier === tier.key ? ' is-selected' : '') },
+              React.createElement('input', {
+                type: 'radio', name: 'trainer-price-tier', value: tier.key, checked: priceTier === tier.key,
+                onChange: function () { setPriceTier(tier.key); }
+              }),
+              React.createElement('span', null, tier.label));
+          })),
+        React.createElement('div', { className: 'tr-result-actions' },
+          React.createElement('button', { className: 'btn-prim', onClick: function () { start('price', priceTier); } }, 'НАЧАТЬ →')));
+    }
     if (mode === 'exam') {
       return /*#__PURE__*/React.createElement(ExamMode, {
         onExit: exitToMenu
@@ -4320,7 +4368,7 @@ var PRICE_2026 = {
       }, /*#__PURE__*/React.createElement("button", {
         className: "btn-prim",
         onClick: function onClick() {
-          return start(mode);
+          return start(mode, mode === 'price' ? priceTier : null);
         }
       }, "\u0415\u0429\u0401 \u0420\u0410\u0417"), /*#__PURE__*/React.createElement("button", {
         className: "btn-ghost",
