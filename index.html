@@ -1678,7 +1678,8 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; }
 .tabnav-item-primary .tabnav-num { font-family: var(--f-cn); font-weight: 500; font-size: 10px; letter-spacing: .16em; opacity: .45; }
 .tabnav-item-primary.is-on .tabnav-num { opacity: 1; color: var(--lime); }
 .tabnav-item-primary .tabnav-label { font-family: var(--f-ext); font-weight: 500; font-size: 13px; letter-spacing: .14em; }
-.tabnav-more { display: flex; align-items: center; justify-content: center; padding: 10px 18px 11px; background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; color: var(--text-mute); font-family: var(--f-cn); font-weight: 500; font-size: 16px; transition: color .15s,border-color .15s; white-space: nowrap; flex-shrink: 0; }
+.tabnav-more { display: flex; align-items: center; justify-content: center; min-width: 62px; min-height: 44px; padding: 8px 18px 9px; background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; color: var(--text-dim); font-family: var(--f-cn); font-weight: 500; font-size: 24px; line-height: 1; transition: color .15s,border-color .15s; white-space: nowrap; flex-shrink: 0; }
+.tabnav-more-icon { width: 26px; height: 12px; display: block; flex-shrink: 0; }
 .tabnav-more:hover { color: var(--text); }
 .tabnav-more.is-on { color: var(--lime); border-bottom-color: var(--lime); }
 .tabnav-dropdown { position: absolute; top: calc(100% + 2px); right: 24px; background: #1a1a17; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.5); z-index: 300; min-width: 200px; overflow: hidden; }
@@ -4839,7 +4840,8 @@ var PRICE_2026 = {
       },
       "aria-expanded": moreOpen,
       "aria-label": "\u0415\u0449\u0451"
-    }, moreOpen ? '×' : '···')), moreOpen && /*#__PURE__*/React.createElement("div", {
+    }, moreOpen ? '×' : React.createElement('svg', { className: 'tabnav-more-icon', viewBox: '0 0 26 12', 'aria-hidden': true, focusable: false },
+      [4, 13, 22].map(function (x) { return React.createElement('circle', { key: x, cx: x, cy: 6, r: 2.3, fill: 'currentColor' }); })))), moreOpen && /*#__PURE__*/React.createElement("div", {
       className: "tabnav-dropdown"
     }, secondary.map(function (t) {
       return /*#__PURE__*/React.createElement("button", {
