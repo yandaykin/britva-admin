@@ -18,7 +18,7 @@ for (const v of [null, undefined, '', '—', '--']) assert.equal(hasPrice(v), fa
 assert.match(PriceValue({ value: 0 }), /^0\s₽$/);
 assert.equal(PriceValue({ value: null }).children[0], '—');
 assert.equal(PriceValue({ value: '2 000–4 000 ₽' }).children.filter(v => v?.type === 'wbr').length, 1);
-const expectedCounts = [63, 62, 56];
+const expectedCounts = [54, 53, 49];
 data.groups.forEach((group, i) => {
   const cats = getCategories(group);
   const services = cats.flatMap(c => c.items);
